@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN" "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+    <context id="financeContext" targetRuntime="MyBatis3">
+        <!-- 不生成注释 -->
+        <commentGenerator>
+            <property name="suppressAllComments" value="true"/>
+            <property name="suppressDate" value="true"/>
+        </commentGenerator>
+
+        <!-- 数据库连接 -->
+        <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/%E8%B4%A2%E6%8A%A5%E5%88%86%E6%9E%90%E7%B3%BB%E7%BB%9F?useSSL=false&amp;serverTimezone=Asia/Shanghai"
+                        userId="root"
+                        password="13390797306"/>
+
+        <!-- 实体类生成位置 -->
+        <javaModelGenerator targetPackage="com.fycx.entity"
+                            targetProject="src/main/java">
+            <property name="enableSubPackages" value="true"/>
+            <property name="trimStrings" value="true"/>
+            <property name="useActualColumnNames" value="true"/>
+        </javaModelGenerator>
+
+        <!-- Mapper XML 生成位置 -->
+        <sqlMapGenerator targetPackage="mapper"
+                         targetProject="src/main/resources">
+            <property name="enableSubPackages" value="true"/>
+        </sqlMapGenerator>
+
+        <!-- Mapper 接口生成位置 -->
+        <javaClientGenerator type="XMLMAPPER"
+                             targetPackage="com.fycx.mapper"
+                             targetProject="src/main/java">
+            <property name="enableSubPackages" value="true"/>
+        </javaClientGenerator>
+
+        <!-- ====== 表配置（共8张表，均禁用 Example 生成） ====== -->
+        <table tableName="上市公司" domainObjectName="Company"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="公司ID" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="公司ID" javaType="java.lang.Integer" property="companyId"/>
+            <columnOverride column="股票代码" javaType="java.lang.String" property="stockCode"/>
+            <columnOverride column="股票简称" javaType="java.lang.String" property="stockName"/>
+            <columnOverride column="公司全称" javaType="java.lang.String" property="fullName"/>
+            <columnOverride column="交易所" javaType="java.lang.String" property="exchange"/>
+            <columnOverride column="行业ID" javaType="java.lang.Integer" property="industryId"/>
+            <columnOverride column="上市日期" javaType="java.lang.String" property="listDate"/>
+            <columnOverride column="状态" javaType="java.lang.Integer" property="status"/>
+        </table>
+
+        <table tableName="行业分类" domainObjectName="IndustryCategory"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="行业ID" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="行业ID" javaType="java.lang.Integer" property="industryId"/>
+            <columnOverride column="行业代码" javaType="java.lang.String" property="industryCode"/>
+            <columnOverride column="行业名称" javaType="java.lang.String" property="industryName"/>
+            <columnOverride column="上级行业ID" javaType="java.lang.Integer" property="parentId"/>
+            <columnOverride column="层级" javaType="java.lang.Integer" property="level"/>
+        </table>
+
+        <table tableName="报表项目" domainObjectName="ReportItem"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="项目ID" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="项目ID" javaType="java.lang.Integer" property="itemId"/>
+            <columnOverride column="项目编码" javaType="java.lang.String" property="itemCode"/>
+            <columnOverride column="项目名称" javaType="java.lang.String" property="itemName"/>
+            <columnOverride column="所属报表" javaType="java.lang.String" property="reportType"/>
+            <columnOverride column="单位" javaType="java.lang.String" property="unit"/>
+            <columnOverride column="显示顺序" javaType="java.lang.Integer" property="displayOrder"/>
+        </table>
+
+        <table tableName="财务原始数据" domainObjectName="FinancialData"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="数据ID" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="数据ID" javaType="java.lang.Long" property="dataId"/>
+            <columnOverride column="公司ID" javaType="java.lang.Integer" property="companyId"/>
+            <columnOverride column="财年" javaType="java.lang.Integer" property="fiscalYear"/>
+            <columnOverride column="报告期" javaType="java.lang.String" property="reportPeriod"/>
+            <columnOverride column="项目ID" javaType="java.lang.Integer" property="itemId"/>
+            <columnOverride column="金额" javaType="java.math.BigDecimal" property="amount"/>
+            <columnOverride column="数据来源" javaType="java.lang.String" property="source"/>
+            <columnOverride column="入库时间" javaType="java.util.Date" property="createTime"/>
+        </table>
+
+        <table tableName="财务指标" domainObjectName="FinancialIndicator"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="指标ID" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="指标ID" javaType="java.lang.Long" property="indicatorId"/>
+            <columnOverride column="公司ID" javaType="java.lang.Integer" property="companyId"/>
+            <columnOverride column="财年" javaType="java.lang.Integer" property="fiscalYear"/>
+            <columnOverride column="报告期" javaType="java.lang.String" property="reportPeriod"/>
+            <columnOverride column="指标编码" javaType="java.lang.String" property="indicatorCode"/>
+            <columnOverride column="指标值" javaType="java.math.BigDecimal" property="indicatorValue"/>
+            <columnOverride column="单位" javaType="java.lang.String" property="unit"/>
+            <columnOverride column="计算时间" javaType="java.util.Date" property="calcTime"/>
+        </table>
+
+        <table tableName="行业对标" domainObjectName="IndustryBenchmark"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="对标ID" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="对标ID" javaType="java.lang.Long" property="benchmarkId"/>
+            <columnOverride column="行业ID" javaType="java.lang.Integer" property="industryId"/>
+            <columnOverride column="财年" javaType="java.lang.Integer" property="fiscalYear"/>
+            <columnOverride column="报告期" javaType="java.lang.String" property="reportPeriod"/>
+            <columnOverride column="指标编码" javaType="java.lang.String" property="indicatorCode"/>
+            <columnOverride column="平均值" javaType="java.math.BigDecimal" property="avgValue"/>
+            <columnOverride column="中位数" javaType="java.math.BigDecimal" property="medianValue"/>
+            <columnOverride column="标准差" javaType="java.math.BigDecimal" property="stdDev"/>
+            <columnOverride column="P25" javaType="java.math.BigDecimal" property="p25"/>
+            <columnOverride column="P75" javaType="java.math.BigDecimal" property="p75"/>
+            <columnOverride column="公司数量" javaType="java.lang.Integer" property="companyCount"/>
+        </table>
+
+        <table tableName="估值快照" domainObjectName="ValuationSnapshot"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="快照ID" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="快照ID" javaType="java.lang.Long" property="snapshotId"/>
+            <columnOverride column="公司ID" javaType="java.lang.Integer" property="companyId"/>
+            <columnOverride column="快照日期" javaType="java.util.Date" property="snapshotDate"/>
+            <columnOverride column="收盘价" javaType="java.math.BigDecimal" property="closePrice"/>
+            <columnOverride column="总市值" javaType="java.math.BigDecimal" property="marketCap"/>
+        </table>
+
+        <table tableName="提示词模板" domainObjectName="PromptTemplate"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="模板ID" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="模板ID" javaType="java.lang.Integer" property="templateId"/>
+            <columnOverride column="模板类型" javaType="java.lang.String" property="templateType"/>
+            <columnOverride column="模板内容" javaType="java.lang.String" property="templateContent"/>
+            <columnOverride column="版本号" javaType="java.lang.String" property="version"/>
+            <columnOverride column="是否启用" javaType="java.lang.Integer" property="enabled"/>
+        </table>
+
+    </context>
+</generatorConfiguration>

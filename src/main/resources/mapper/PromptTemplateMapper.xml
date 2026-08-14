@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.PromptTemplateMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.PromptTemplate">
+    <id column="模板ID" jdbcType="INTEGER" property="templateId"/>
+    <result column="模板类型" jdbcType="VARCHAR" property="templateType"/>
+    <result column="模板内容" jdbcType="LONGVARCHAR" property="templateContent"/>
+    <result column="版本号" jdbcType="VARCHAR" property="version"/>
+    <result column="是否启用" jdbcType="TINYINT" property="enabled"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    模板ID, 模板类型, 模板内容, 版本号, 是否启用
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 提示词模板
+    where 模板ID = #{templateId,jdbcType=INTEGER}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from 提示词模板
+    where 模板ID = #{templateId,jdbcType=INTEGER}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.PromptTemplate">
+    <selectKey keyProperty="templateId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 提示词模板 (模板类型, 模板内容, 版本号, 是否启用)
+    values (#{templateType,jdbcType=VARCHAR}, #{templateContent,jdbcType=LONGVARCHAR},
+      #{version,jdbcType=VARCHAR}, #{enabled,jdbcType=TINYINT})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.fycx.entity.PromptTemplate">
+    <selectKey keyProperty="templateId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 提示词模板
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="templateType != null">模板类型,</if>
+      <if test="templateContent != null">模板内容,</if>
+      <if test="version != null">版本号,</if>
+      <if test="enabled != null">是否启用,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="templateType != null">#{templateType,jdbcType=VARCHAR},</if>
+      <if test="templateContent != null">#{templateContent,jdbcType=LONGVARCHAR},</if>
+      <if test="version != null">#{version,jdbcType=VARCHAR},</if>
+      <if test="enabled != null">#{enabled,jdbcType=TINYINT},</if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.fycx.entity.PromptTemplate">
+    update 提示词模板
+    <set>
+      <if test="templateType != null">模板类型 = #{templateType,jdbcType=VARCHAR},</if>
+      <if test="templateContent != null">模板内容 = #{templateContent,jdbcType=LONGVARCHAR},</if>
+      <if test="version != null">版本号 = #{version,jdbcType=VARCHAR},</if>
+      <if test="enabled != null">是否启用 = #{enabled,jdbcType=TINYINT},</if>
+    </set>
+    where 模板ID = #{templateId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.fycx.entity.PromptTemplate">
+    update 提示词模板
+    set 模板类型 = #{templateType,jdbcType=VARCHAR},
+      模板内容 = #{templateContent,jdbcType=LONGVARCHAR},
+      版本号 = #{version,jdbcType=VARCHAR},
+      是否启用 = #{enabled,jdbcType=TINYINT}
+    where 模板ID = #{templateId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.fycx.entity.PromptTemplate">
+    update 提示词模板
+    set 模板类型 = #{templateType,jdbcType=VARCHAR},
+      版本号 = #{version,jdbcType=VARCHAR},
+      是否启用 = #{enabled,jdbcType=TINYINT}
+    where 模板ID = #{templateId,jdbcType=INTEGER}
+  </update>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectEnabled" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 提示词模板
+    where 是否启用 = 1
+    order by 模板ID
+  </select>
+
+</mapper>

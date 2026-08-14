@@ -1,0 +1,35 @@
+# ==================== 数据源 (Druid) ====================
+spring.datasource.druid.url=jdbc:mysql://localhost:3306/%E8%B4%A2%E6%8A%A5%E5%88%86%E6%9E%90%E7%B3%BB%E7%BB%9F?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf-8&allowMultiQueries=true
+spring.datasource.druid.username=root
+spring.datasource.druid.password=你的MySQL密码
+spring.datasource.druid.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.druid.initial-size=5
+spring.datasource.druid.min-idle=5
+spring.datasource.druid.max-active=20
+spring.datasource.druid.max-wait=60000
+spring.datasource.druid.validation-query=SELECT 1
+spring.datasource.druid.test-while-idle=true
+
+# ==================== MyBatis ====================
+mybatis.mapper-locations=classpath:mapper/*.xml
+mybatis.type-aliases-package=com.fycx.entity
+mybatis.configuration.map-underscore-to-camel-case=false
+mybatis.configuration.log-impl=org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+# ==================== Jackson ====================
+spring.jackson.date-format=yyyy-MM-dd HH:mm:ss
+spring.jackson.time-zone=Asia/Shanghai
+spring.jackson.serialization.write-dates-as-timestamps=false
+
+# ==================== AI 大模型配置 ====================
+# provider: mock(离线演示, 无需Key) / openai(OpenAI兼容接口: DeepSeek/通义千问/智谱等)
+ai.provider=mock
+ai.base-url=https://api.deepseek.com/v1
+ai.api-key=
+ai.model=deepseek-chat
+ai.temperature=0.3
+ai.timeout-seconds=60
+
+# ==================== 日志 ====================
+logging.level.root=INFO
+logging.level.com.fycx=DEBUG

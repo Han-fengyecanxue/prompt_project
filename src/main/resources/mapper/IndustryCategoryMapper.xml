@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.IndustryCategoryMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.IndustryCategory">
+    <id column="行业ID" jdbcType="INTEGER" property="industryId"/>
+    <result column="行业代码" jdbcType="VARCHAR" property="industryCode"/>
+    <result column="行业名称" jdbcType="VARCHAR" property="industryName"/>
+    <result column="上级行业ID" jdbcType="INTEGER" property="parentId"/>
+    <result column="层级" jdbcType="TINYINT" property="level"/>
+  </resultMap>
+
+  <resultMap id="VOResultMap" type="com.fycx.controller.response.IndustryVO">
+    <id column="行业ID" jdbcType="INTEGER" property="industryId"/>
+    <result column="行业代码" jdbcType="VARCHAR" property="industryCode"/>
+    <result column="行业名称" jdbcType="VARCHAR" property="industryName"/>
+    <result column="公司数量" jdbcType="INTEGER" property="companyCount"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    行业ID, 行业代码, 行业名称, 上级行业ID, 层级
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 行业分类
+    where 行业ID = #{industryId,jdbcType=INTEGER}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from 行业分类
+    where 行业ID = #{industryId,jdbcType=INTEGER}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.IndustryCategory">
+    <selectKey keyProperty="industryId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 行业分类 (行业代码, 行业名称, 上级行业ID, 层级)
+    values (#{industryCode,jdbcType=VARCHAR}, #{industryName,jdbcType=VARCHAR},
+      #{parentId,jdbcType=INTEGER}, #{level,jdbcType=TINYINT})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.fycx.entity.IndustryCategory">
+    <selectKey keyProperty="industryId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 行业分类
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="industryCode != null">行业代码,</if>
+      <if test="industryName != null">行业名称,</if>
+      <if test="parentId != null">上级行业ID,</if>
+      <if test="level != null">层级,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="industryCode != null">#{industryCode,jdbcType=VARCHAR},</if>
+      <if test="industryName != null">#{industryName,jdbcType=VARCHAR},</if>
+      <if test="parentId != null">#{parentId,jdbcType=INTEGER},</if>
+      <if test="level != null">#{level,jdbcType=TINYINT},</if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.fycx.entity.IndustryCategory">
+    update 行业分类
+    <set>
+      <if test="industryCode != null">行业代码 = #{industryCode,jdbcType=VARCHAR},</if>
+      <if test="industryName != null">行业名称 = #{industryName,jdbcType=VARCHAR},</if>
+      <if test="parentId != null">上级行业ID = #{parentId,jdbcType=INTEGER},</if>
+      <if test="level != null">层级 = #{level,jdbcType=TINYINT},</if>
+    </set>
+    where 行业ID = #{industryId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.fycx.entity.IndustryCategory">
+    update 行业分类
+    set 行业代码 = #{industryCode,jdbcType=VARCHAR},
+      行业名称 = #{industryName,jdbcType=VARCHAR},
+      上级行业ID = #{parentId,jdbcType=INTEGER},
+      层级 = #{level,jdbcType=TINYINT}
+    where 行业ID = #{industryId,jdbcType=INTEGER}
+  </update>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectAllWithCount" resultMap="VOResultMap">
+    select i.行业ID, i.行业代码, i.行业名称, count(c.公司ID) as 公司数量
+    from 行业分类 i
+    left join 上市公司 c on i.行业ID = c.行业ID
+    group by i.行业ID, i.行业代码, i.行业名称
+    order by i.行业ID
+  </select>
+
+</mapper>

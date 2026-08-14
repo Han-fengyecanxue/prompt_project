@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.FinancialDataMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.FinancialData">
+    <id column="数据ID" jdbcType="BIGINT" property="dataId"/>
+    <result column="公司ID" jdbcType="INTEGER" property="companyId"/>
+    <result column="财年" jdbcType="SMALLINT" property="fiscalYear"/>
+    <result column="报告期" jdbcType="VARCHAR" property="reportPeriod"/>
+    <result column="项目ID" jdbcType="INTEGER" property="itemId"/>
+    <result column="金额" jdbcType="DECIMAL" property="amount"/>
+    <result column="数据来源" jdbcType="VARCHAR" property="source"/>
+    <result column="入库时间" jdbcType="TIMESTAMP" property="createTime"/>
+  </resultMap>
+
+  <resultMap id="RawItemResultMap" type="com.fycx.controller.response.RawItemVO">
+    <result column="项目编码" jdbcType="VARCHAR" property="itemCode"/>
+    <result column="项目名称" jdbcType="VARCHAR" property="itemName"/>
+    <result column="所属报表" jdbcType="VARCHAR" property="reportType"/>
+    <result column="单位" jdbcType="VARCHAR" property="unit"/>
+    <result column="金额" jdbcType="DECIMAL" property="amount"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    数据ID, 公司ID, 财年, 报告期, 项目ID, 金额, 数据来源, 入库时间
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 财务原始数据
+    where 数据ID = #{dataId,jdbcType=BIGINT}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from 财务原始数据
+    where 数据ID = #{dataId,jdbcType=BIGINT}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.FinancialData">
+    <selectKey keyProperty="dataId" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 财务原始数据 (公司ID, 财年, 报告期, 项目ID, 金额, 数据来源, 入库时间)
+    values (#{companyId,jdbcType=INTEGER}, #{fiscalYear,jdbcType=SMALLINT}, #{reportPeriod,jdbcType=VARCHAR},
+      #{itemId,jdbcType=INTEGER}, #{amount,jdbcType=DECIMAL}, #{source,jdbcType=VARCHAR},
+      #{createTime,jdbcType=TIMESTAMP})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.fycx.entity.FinancialData">
+    <selectKey keyProperty="dataId" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 财务原始数据
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="companyId != null">公司ID,</if>
+      <if test="fiscalYear != null">财年,</if>
+      <if test="reportPeriod != null">报告期,</if>
+      <if test="itemId != null">项目ID,</if>
+      <if test="amount != null">金额,</if>
+      <if test="source != null">数据来源,</if>
+      <if test="createTime != null">入库时间,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="companyId != null">#{companyId,jdbcType=INTEGER},</if>
+      <if test="fiscalYear != null">#{fiscalYear,jdbcType=SMALLINT},</if>
+      <if test="reportPeriod != null">#{reportPeriod,jdbcType=VARCHAR},</if>
+      <if test="itemId != null">#{itemId,jdbcType=INTEGER},</if>
+      <if test="amount != null">#{amount,jdbcType=DECIMAL},</if>
+      <if test="source != null">#{source,jdbcType=VARCHAR},</if>
+      <if test="createTime != null">#{createTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.fycx.entity.FinancialData">
+    update 财务原始数据
+    <set>
+      <if test="companyId != null">公司ID = #{companyId,jdbcType=INTEGER},</if>
+      <if test="fiscalYear != null">财年 = #{fiscalYear,jdbcType=SMALLINT},</if>
+      <if test="reportPeriod != null">报告期 = #{reportPeriod,jdbcType=VARCHAR},</if>
+      <if test="itemId != null">项目ID = #{itemId,jdbcType=INTEGER},</if>
+      <if test="amount != null">金额 = #{amount,jdbcType=DECIMAL},</if>
+      <if test="source != null">数据来源 = #{source,jdbcType=VARCHAR},</if>
+      <if test="createTime != null">入库时间 = #{createTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where 数据ID = #{dataId,jdbcType=BIGINT}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.fycx.entity.FinancialData">
+    update 财务原始数据
+    set 公司ID = #{companyId,jdbcType=INTEGER},
+      财年 = #{fiscalYear,jdbcType=SMALLINT},
+      报告期 = #{reportPeriod,jdbcType=VARCHAR},
+      项目ID = #{itemId,jdbcType=INTEGER},
+      金额 = #{amount,jdbcType=DECIMAL},
+      数据来源 = #{source,jdbcType=VARCHAR},
+      入库时间 = #{createTime,jdbcType=TIMESTAMP}
+    where 数据ID = #{dataId,jdbcType=BIGINT}
+  </update>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectItemsByCompanyYear" resultMap="RawItemResultMap">
+    select r.项目编码, r.项目名称, r.所属报表, r.单位, d.金额
+    from 财务原始数据 d
+    join 报表项目 r on d.项目ID = r.项目ID
+    where d.公司ID = #{companyId,jdbcType=INTEGER}
+      and d.财年 = #{fiscalYear,jdbcType=SMALLINT}
+      and d.报告期 = #{reportPeriod,jdbcType=VARCHAR}
+    order by r.显示顺序
+  </select>
+
+  <select id="selectByCompanyAllYears" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 财务原始数据
+    where 公司ID = #{companyId,jdbcType=INTEGER}
+    order by 财年, 项目ID
+  </select>
+
+  <delete id="deleteByCompanyYear">
+    delete from 财务原始数据
+    where 公司ID = #{companyId,jdbcType=INTEGER}
+      and 财年 = #{fiscalYear,jdbcType=SMALLINT}
+      and 报告期 = #{reportPeriod,jdbcType=VARCHAR}
+  </delete>
+
+</mapper>

@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### 敏感配置(本地私有, 不入库) ###
+src/main/resources/config/application-development.properties
+__pycache__/
+*.pyc

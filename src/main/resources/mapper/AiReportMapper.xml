@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.AiReportMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.AiReport">
+    <id column="报告ID" jdbcType="BIGINT" property="reportId"/>
+    <result column="公司ID" jdbcType="INTEGER" property="companyId"/>
+    <result column="财年" jdbcType="SMALLINT" property="fiscalYear"/>
+    <result column="报告期" jdbcType="VARCHAR" property="reportPeriod"/>
+    <result column="报告类型" jdbcType="VARCHAR" property="reportType"/>
+    <result column="用户问题" jdbcType="LONGVARCHAR" property="userQuestion"/>
+    <result column="AI回答" jdbcType="LONGVARCHAR" property="aiAnswer"/>
+    <result column="上下文" jdbcType="LONGVARCHAR" property="context"/>
+    <result column="创建时间" jdbcType="TIMESTAMP" property="createTime"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    报告ID, 公司ID, 财年, 报告期, 报告类型, 用户问题, AI回答, 上下文, 创建时间
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 解读报告
+    where 报告ID = #{reportId,jdbcType=BIGINT}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from 解读报告
+    where 报告ID = #{reportId,jdbcType=BIGINT}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.AiReport">
+    <selectKey keyProperty="reportId" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 解读报告 (公司ID, 财年, 报告期, 报告类型, 用户问题, AI回答, 上下文, 创建时间)
+    values (#{companyId,jdbcType=INTEGER}, #{fiscalYear,jdbcType=SMALLINT}, #{reportPeriod,jdbcType=VARCHAR},
+      #{reportType,jdbcType=VARCHAR}, #{userQuestion,jdbcType=LONGVARCHAR}, #{aiAnswer,jdbcType=LONGVARCHAR},
+      #{context,jdbcType=LONGVARCHAR}, #{createTime,jdbcType=TIMESTAMP})
+  </insert>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectByCompany" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 解读报告
+    where 公司ID = #{companyId,jdbcType=INTEGER}
+    order by 创建时间 desc
+    limit #{offset}, #{limit}
+  </select>
+
+  <select id="countByCompany" parameterType="java.lang.Integer" resultType="long">
+    select count(*) from 解读报告 where 公司ID = #{companyId,jdbcType=INTEGER}
+  </select>
+
+</mapper>

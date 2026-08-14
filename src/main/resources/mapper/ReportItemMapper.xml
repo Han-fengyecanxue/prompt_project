@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.ReportItemMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.ReportItem">
+    <id column="项目ID" jdbcType="INTEGER" property="itemId"/>
+    <result column="项目编码" jdbcType="VARCHAR" property="itemCode"/>
+    <result column="项目名称" jdbcType="VARCHAR" property="itemName"/>
+    <result column="所属报表" jdbcType="VARCHAR" property="reportType"/>
+    <result column="单位" jdbcType="VARCHAR" property="unit"/>
+    <result column="显示顺序" jdbcType="INTEGER" property="displayOrder"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    项目ID, 项目编码, 项目名称, 所属报表, 单位, 显示顺序
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 报表项目
+    where 项目ID = #{itemId,jdbcType=INTEGER}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from 报表项目
+    where 项目ID = #{itemId,jdbcType=INTEGER}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.ReportItem">
+    <selectKey keyProperty="itemId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 报表项目 (项目编码, 项目名称, 所属报表, 单位, 显示顺序)
+    values (#{itemCode,jdbcType=VARCHAR}, #{itemName,jdbcType=VARCHAR}, #{reportType,jdbcType=VARCHAR},
+      #{unit,jdbcType=VARCHAR}, #{displayOrder,jdbcType=INTEGER})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.fycx.entity.ReportItem">
+    <selectKey keyProperty="itemId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 报表项目
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="itemCode != null">项目编码,</if>
+      <if test="itemName != null">项目名称,</if>
+      <if test="reportType != null">所属报表,</if>
+      <if test="unit != null">单位,</if>
+      <if test="displayOrder != null">显示顺序,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="itemCode != null">#{itemCode,jdbcType=VARCHAR},</if>
+      <if test="itemName != null">#{itemName,jdbcType=VARCHAR},</if>
+      <if test="reportType != null">#{reportType,jdbcType=VARCHAR},</if>
+      <if test="unit != null">#{unit,jdbcType=VARCHAR},</if>
+      <if test="displayOrder != null">#{displayOrder,jdbcType=INTEGER},</if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.fycx.entity.ReportItem">
+    update 报表项目
+    <set>
+      <if test="itemCode != null">项目编码 = #{itemCode,jdbcType=VARCHAR},</if>
+      <if test="itemName != null">项目名称 = #{itemName,jdbcType=VARCHAR},</if>
+      <if test="reportType != null">所属报表 = #{reportType,jdbcType=VARCHAR},</if>
+      <if test="unit != null">单位 = #{unit,jdbcType=VARCHAR},</if>
+      <if test="displayOrder != null">显示顺序 = #{displayOrder,jdbcType=INTEGER},</if>
+    </set>
+    where 项目ID = #{itemId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.fycx.entity.ReportItem">
+    update 报表项目
+    set 项目编码 = #{itemCode,jdbcType=VARCHAR},
+      项目名称 = #{itemName,jdbcType=VARCHAR},
+      所属报表 = #{reportType,jdbcType=VARCHAR},
+      单位 = #{unit,jdbcType=VARCHAR},
+      显示顺序 = #{displayOrder,jdbcType=INTEGER}
+    where 项目ID = #{itemId,jdbcType=INTEGER}
+  </update>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectAll" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 报表项目
+    order by 显示顺序
+  </select>
+
+</mapper>

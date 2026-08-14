@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.FinancialIndicatorMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.FinancialIndicator">
+    <id column="指标ID" jdbcType="BIGINT" property="indicatorId"/>
+    <result column="公司ID" jdbcType="INTEGER" property="companyId"/>
+    <result column="财年" jdbcType="SMALLINT" property="fiscalYear"/>
+    <result column="报告期" jdbcType="VARCHAR" property="reportPeriod"/>
+    <result column="指标编码" jdbcType="VARCHAR" property="indicatorCode"/>
+    <result column="指标值" jdbcType="DECIMAL" property="indicatorValue"/>
+    <result column="单位" jdbcType="VARCHAR" property="unit"/>
+    <result column="计算时间" jdbcType="TIMESTAMP" property="calcTime"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    指标ID, 公司ID, 财年, 报告期, 指标编码, 指标值, 单位, 计算时间
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 财务指标
+    where 指标ID = #{indicatorId,jdbcType=BIGINT}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from 财务指标
+    where 指标ID = #{indicatorId,jdbcType=BIGINT}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.FinancialIndicator">
+    <selectKey keyProperty="indicatorId" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 财务指标 (公司ID, 财年, 报告期, 指标编码, 指标值, 单位, 计算时间)
+    values (#{companyId,jdbcType=INTEGER}, #{fiscalYear,jdbcType=SMALLINT}, #{reportPeriod,jdbcType=VARCHAR},
+      #{indicatorCode,jdbcType=VARCHAR}, #{indicatorValue,jdbcType=DECIMAL}, #{unit,jdbcType=VARCHAR},
+      #{calcTime,jdbcType=TIMESTAMP})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.fycx.entity.FinancialIndicator">
+    <selectKey keyProperty="indicatorId" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 财务指标
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="companyId != null">公司ID,</if>
+      <if test="fiscalYear != null">财年,</if>
+      <if test="reportPeriod != null">报告期,</if>
+      <if test="indicatorCode != null">指标编码,</if>
+      <if test="indicatorValue != null">指标值,</if>
+      <if test="unit != null">单位,</if>
+      <if test="calcTime != null">计算时间,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="companyId != null">#{companyId,jdbcType=INTEGER},</if>
+      <if test="fiscalYear != null">#{fiscalYear,jdbcType=SMALLINT},</if>
+      <if test="reportPeriod != null">#{reportPeriod,jdbcType=VARCHAR},</if>
+      <if test="indicatorCode != null">#{indicatorCode,jdbcType=VARCHAR},</if>
+      <if test="indicatorValue != null">#{indicatorValue,jdbcType=DECIMAL},</if>
+      <if test="unit != null">#{unit,jdbcType=VARCHAR},</if>
+      <if test="calcTime != null">#{calcTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.fycx.entity.FinancialIndicator">
+    update 财务指标
+    <set>
+      <if test="companyId != null">公司ID = #{companyId,jdbcType=INTEGER},</if>
+      <if test="fiscalYear != null">财年 = #{fiscalYear,jdbcType=SMALLINT},</if>
+      <if test="reportPeriod != null">报告期 = #{reportPeriod,jdbcType=VARCHAR},</if>
+      <if test="indicatorCode != null">指标编码 = #{indicatorCode,jdbcType=VARCHAR},</if>
+      <if test="indicatorValue != null">指标值 = #{indicatorValue,jdbcType=DECIMAL},</if>
+      <if test="unit != null">单位 = #{unit,jdbcType=VARCHAR},</if>
+      <if test="calcTime != null">计算时间 = #{calcTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where 指标ID = #{indicatorId,jdbcType=BIGINT}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.fycx.entity.FinancialIndicator">
+    update 财务指标
+    set 公司ID = #{companyId,jdbcType=INTEGER},
+      财年 = #{fiscalYear,jdbcType=SMALLINT},
+      报告期 = #{reportPeriod,jdbcType=VARCHAR},
+      指标编码 = #{indicatorCode,jdbcType=VARCHAR},
+      指标值 = #{indicatorValue,jdbcType=DECIMAL},
+      单位 = #{unit,jdbcType=VARCHAR},
+      计算时间 = #{calcTime,jdbcType=TIMESTAMP}
+    where 指标ID = #{indicatorId,jdbcType=BIGINT}
+  </update>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectByCompanyYear" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 财务指标
+    where 公司ID = #{companyId,jdbcType=INTEGER}
+      and 财年 = #{fiscalYear,jdbcType=SMALLINT}
+      and 报告期 = #{reportPeriod,jdbcType=VARCHAR}
+    order by 指标编码
+  </select>
+
+  <select id="selectByCompanyAllYears" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 财务指标
+    where 公司ID = #{companyId,jdbcType=INTEGER}
+    order by 财年, 指标编码
+  </select>
+
+  <select id="selectByYear" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 财务指标
+    where 财年 = #{fiscalYear,jdbcType=SMALLINT}
+      and 报告期 = #{reportPeriod,jdbcType=VARCHAR}
+  </select>
+
+  <select id="selectByIndustryYear" resultMap="BaseResultMap">
+    select i.指标ID, i.公司ID, i.财年, i.报告期, i.指标编码, i.指标值, i.单位, i.计算时间
+    from 财务指标 i
+    join 上市公司 c on i.公司ID = c.公司ID
+    where c.行业ID = #{industryId,jdbcType=INTEGER}
+      and i.财年 = #{fiscalYear,jdbcType=SMALLINT}
+      and i.报告期 = #{reportPeriod,jdbcType=VARCHAR}
+  </select>
+
+  <delete id="deleteAll">
+    delete from 财务指标
+  </delete>
+
+  <insert id="insertBatch" parameterType="java.util.List">
+    insert into 财务指标 (公司ID, 财年, 报告期, 指标编码, 指标值, 单位, 计算时间)
+    values
+    <foreach collection="list" item="row" separator=",">
+      (#{row.companyId,jdbcType=INTEGER}, #{row.fiscalYear,jdbcType=SMALLINT}, #{row.reportPeriod,jdbcType=VARCHAR},
+       #{row.indicatorCode,jdbcType=VARCHAR}, #{row.indicatorValue,jdbcType=DECIMAL}, #{row.unit,jdbcType=VARCHAR},
+       #{row.calcTime,jdbcType=TIMESTAMP})
+    </foreach>
+  </insert>
+
+</mapper>

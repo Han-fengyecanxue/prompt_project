@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.IndustryBenchmarkMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.IndustryBenchmark">
+    <id column="对标ID" jdbcType="BIGINT" property="benchmarkId"/>
+    <result column="行业ID" jdbcType="INTEGER" property="industryId"/>
+    <result column="财年" jdbcType="SMALLINT" property="fiscalYear"/>
+    <result column="报告期" jdbcType="VARCHAR" property="reportPeriod"/>
+    <result column="指标编码" jdbcType="VARCHAR" property="indicatorCode"/>
+    <result column="平均值" jdbcType="DECIMAL" property="avgValue"/>
+    <result column="中位数" jdbcType="DECIMAL" property="medianValue"/>
+    <result column="标准差" jdbcType="DECIMAL" property="stdDev"/>
+    <result column="P25" jdbcType="DECIMAL" property="p25"/>
+    <result column="P75" jdbcType="DECIMAL" property="p75"/>
+    <result column="公司数量" jdbcType="INTEGER" property="companyCount"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    对标ID, 行业ID, 财年, 报告期, 指标编码, 平均值, 中位数, 标准差, P25, P75, 公司数量
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 行业对标
+    where 对标ID = #{benchmarkId,jdbcType=BIGINT}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from 行业对标
+    where 对标ID = #{benchmarkId,jdbcType=BIGINT}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.IndustryBenchmark">
+    <selectKey keyProperty="benchmarkId" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 行业对标 (行业ID, 财年, 报告期, 指标编码, 平均值, 中位数, 标准差, P25, P75, 公司数量)
+    values (#{industryId,jdbcType=INTEGER}, #{fiscalYear,jdbcType=SMALLINT}, #{reportPeriod,jdbcType=VARCHAR},
+      #{indicatorCode,jdbcType=VARCHAR}, #{avgValue,jdbcType=DECIMAL}, #{medianValue,jdbcType=DECIMAL},
+      #{stdDev,jdbcType=DECIMAL}, #{p25,jdbcType=DECIMAL}, #{p75,jdbcType=DECIMAL}, #{companyCount,jdbcType=INTEGER})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.fycx.entity.IndustryBenchmark">
+    <selectKey keyProperty="benchmarkId" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 行业对标
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="industryId != null">行业ID,</if>
+      <if test="fiscalYear != null">财年,</if>
+      <if test="reportPeriod != null">报告期,</if>
+      <if test="indicatorCode != null">指标编码,</if>
+      <if test="avgValue != null">平均值,</if>
+      <if test="medianValue != null">中位数,</if>
+      <if test="stdDev != null">标准差,</if>
+      <if test="p25 != null">P25,</if>
+      <if test="p75 != null">P75,</if>
+      <if test="companyCount != null">公司数量,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="industryId != null">#{industryId,jdbcType=INTEGER},</if>
+      <if test="fiscalYear != null">#{fiscalYear,jdbcType=SMALLINT},</if>
+      <if test="reportPeriod != null">#{reportPeriod,jdbcType=VARCHAR},</if>
+      <if test="indicatorCode != null">#{indicatorCode,jdbcType=VARCHAR},</if>
+      <if test="avgValue != null">#{avgValue,jdbcType=DECIMAL},</if>
+      <if test="medianValue != null">#{medianValue,jdbcType=DECIMAL},</if>
+      <if test="stdDev != null">#{stdDev,jdbcType=DECIMAL},</if>
+      <if test="p25 != null">#{p25,jdbcType=DECIMAL},</if>
+      <if test="p75 != null">#{p75,jdbcType=DECIMAL},</if>
+      <if test="companyCount != null">#{companyCount,jdbcType=INTEGER},</if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.fycx.entity.IndustryBenchmark">
+    update 行业对标
+    <set>
+      <if test="industryId != null">行业ID = #{industryId,jdbcType=INTEGER},</if>
+      <if test="fiscalYear != null">财年 = #{fiscalYear,jdbcType=SMALLINT},</if>
+      <if test="reportPeriod != null">报告期 = #{reportPeriod,jdbcType=VARCHAR},</if>
+      <if test="indicatorCode != null">指标编码 = #{indicatorCode,jdbcType=VARCHAR},</if>
+      <if test="avgValue != null">平均值 = #{avgValue,jdbcType=DECIMAL},</if>
+      <if test="medianValue != null">中位数 = #{medianValue,jdbcType=DECIMAL},</if>
+      <if test="stdDev != null">标准差 = #{stdDev,jdbcType=DECIMAL},</if>
+      <if test="p25 != null">P25 = #{p25,jdbcType=DECIMAL},</if>
+      <if test="p75 != null">P75 = #{p75,jdbcType=DECIMAL},</if>
+      <if test="companyCount != null">公司数量 = #{companyCount,jdbcType=INTEGER},</if>
+    </set>
+    where 对标ID = #{benchmarkId,jdbcType=BIGINT}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.fycx.entity.IndustryBenchmark">
+    update 行业对标
+    set 行业ID = #{industryId,jdbcType=INTEGER},
+      财年 = #{fiscalYear,jdbcType=SMALLINT},
+      报告期 = #{reportPeriod,jdbcType=VARCHAR},
+      指标编码 = #{indicatorCode,jdbcType=VARCHAR},
+      平均值 = #{avgValue,jdbcType=DECIMAL},
+      中位数 = #{medianValue,jdbcType=DECIMAL},
+      标准差 = #{stdDev,jdbcType=DECIMAL},
+      P25 = #{p25,jdbcType=DECIMAL},
+      P75 = #{p75,jdbcType=DECIMAL},
+      公司数量 = #{companyCount,jdbcType=INTEGER}
+    where 对标ID = #{benchmarkId,jdbcType=BIGINT}
+  </update>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectByIndustryYear" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 行业对标
+    where 行业ID = #{industryId,jdbcType=INTEGER}
+      and 财年 = #{fiscalYear,jdbcType=SMALLINT}
+      and 报告期 = #{reportPeriod,jdbcType=VARCHAR}
+    order by 指标编码
+  </select>
+
+  <delete id="deleteAll">
+    delete from 行业对标
+  </delete>
+
+  <insert id="insertBatch" parameterType="java.util.List">
+    insert into 行业对标 (行业ID, 财年, 报告期, 指标编码, 平均值, 中位数, 标准差, P25, P75, 公司数量)
+    values
+    <foreach collection="list" item="row" separator=",">
+      (#{row.industryId,jdbcType=INTEGER}, #{row.fiscalYear,jdbcType=SMALLINT}, #{row.reportPeriod,jdbcType=VARCHAR},
+       #{row.indicatorCode,jdbcType=VARCHAR}, #{row.avgValue,jdbcType=DECIMAL}, #{row.medianValue,jdbcType=DECIMAL},
+       #{row.stdDev,jdbcType=DECIMAL}, #{row.p25,jdbcType=DECIMAL}, #{row.p75,jdbcType=DECIMAL},
+       #{row.companyCount,jdbcType=INTEGER})
+    </foreach>
+  </insert>
+
+</mapper>

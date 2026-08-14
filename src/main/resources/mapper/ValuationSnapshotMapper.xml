@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.ValuationSnapshotMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.ValuationSnapshot">
+    <id column="快照ID" jdbcType="BIGINT" property="snapshotId"/>
+    <result column="公司ID" jdbcType="INTEGER" property="companyId"/>
+    <result column="快照日期" jdbcType="DATE" property="snapshotDate"/>
+    <result column="收盘价" jdbcType="DECIMAL" property="closePrice"/>
+    <result column="总市值" jdbcType="DECIMAL" property="marketCap"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    快照ID, 公司ID, 快照日期, 收盘价, 总市值
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 估值快照
+    where 快照ID = #{snapshotId,jdbcType=BIGINT}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from 估值快照
+    where 快照ID = #{snapshotId,jdbcType=BIGINT}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.ValuationSnapshot">
+    <selectKey keyProperty="snapshotId" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 估值快照 (公司ID, 快照日期, 收盘价, 总市值)
+    values (#{companyId,jdbcType=INTEGER}, #{snapshotDate,jdbcType=DATE},
+      #{closePrice,jdbcType=DECIMAL}, #{marketCap,jdbcType=DECIMAL})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.fycx.entity.ValuationSnapshot">
+    <selectKey keyProperty="snapshotId" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 估值快照
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="companyId != null">公司ID,</if>
+      <if test="snapshotDate != null">快照日期,</if>
+      <if test="closePrice != null">收盘价,</if>
+      <if test="marketCap != null">总市值,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="companyId != null">#{companyId,jdbcType=INTEGER},</if>
+      <if test="snapshotDate != null">#{snapshotDate,jdbcType=DATE},</if>
+      <if test="closePrice != null">#{closePrice,jdbcType=DECIMAL},</if>
+      <if test="marketCap != null">#{marketCap,jdbcType=DECIMAL},</if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.fycx.entity.ValuationSnapshot">
+    update 估值快照
+    <set>
+      <if test="companyId != null">公司ID = #{companyId,jdbcType=INTEGER},</if>
+      <if test="snapshotDate != null">快照日期 = #{snapshotDate,jdbcType=DATE},</if>
+      <if test="closePrice != null">收盘价 = #{closePrice,jdbcType=DECIMAL},</if>
+      <if test="marketCap != null">总市值 = #{marketCap,jdbcType=DECIMAL},</if>
+    </set>
+    where 快照ID = #{snapshotId,jdbcType=BIGINT}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.fycx.entity.ValuationSnapshot">
+    update 估值快照
+    set 公司ID = #{companyId,jdbcType=INTEGER},
+      快照日期 = #{snapshotDate,jdbcType=DATE},
+      收盘价 = #{closePrice,jdbcType=DECIMAL},
+      总市值 = #{marketCap,jdbcType=DECIMAL}
+    where 快照ID = #{snapshotId,jdbcType=BIGINT}
+  </update>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectLatestByCompany" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 估值快照
+    where 公司ID = #{companyId,jdbcType=INTEGER}
+    order by 快照日期 desc
+    limit 1
+  </select>
+
+  <select id="selectByCompany" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 估值快照
+    where 公司ID = #{companyId,jdbcType=INTEGER}
+    order by 快照日期
+  </select>
+
+</mapper>

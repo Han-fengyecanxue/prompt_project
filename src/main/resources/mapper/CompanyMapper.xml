@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.CompanyMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.Company">
+    <id column="公司ID" jdbcType="INTEGER" property="companyId"/>
+    <result column="股票代码" jdbcType="VARCHAR" property="stockCode"/>
+    <result column="股票简称" jdbcType="VARCHAR" property="stockName"/>
+    <result column="公司全称" jdbcType="VARCHAR" property="fullName"/>
+    <result column="交易所" jdbcType="CHAR" property="exchange"/>
+    <result column="行业ID" jdbcType="INTEGER" property="industryId"/>
+    <result column="上市日期" jdbcType="DATE" property="listDate"/>
+    <result column="状态" jdbcType="TINYINT" property="status"/>
+  </resultMap>
+
+  <resultMap id="VOResultMap" type="com.fycx.controller.response.CompanyVO">
+    <id column="公司ID" jdbcType="INTEGER" property="companyId"/>
+    <result column="股票代码" jdbcType="VARCHAR" property="stockCode"/>
+    <result column="股票简称" jdbcType="VARCHAR" property="stockName"/>
+    <result column="公司全称" jdbcType="VARCHAR" property="fullName"/>
+    <result column="交易所" jdbcType="CHAR" property="exchange"/>
+    <result column="行业ID" jdbcType="INTEGER" property="industryId"/>
+    <result column="行业名称" jdbcType="VARCHAR" property="industryName"/>
+    <result column="上市日期" jdbcType="DATE" property="listDate"/>
+    <result column="状态" jdbcType="TINYINT" property="status"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    公司ID, 股票代码, 股票简称, 公司全称, 交易所, 行业ID, 上市日期, 状态
+  </sql>
+
+  <sql id="VO_Column_List">
+    c.公司ID, c.股票代码, c.股票简称, c.公司全称, c.交易所, c.行业ID, i.行业名称, c.上市日期, c.状态
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from 上市公司
+    where 公司ID = #{companyId,jdbcType=INTEGER}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from 上市公司
+    where 公司ID = #{companyId,jdbcType=INTEGER}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.Company">
+    <selectKey keyProperty="companyId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 上市公司 (股票代码, 股票简称, 公司全称, 交易所, 行业ID, 上市日期, 状态)
+    values (#{stockCode,jdbcType=VARCHAR}, #{stockName,jdbcType=VARCHAR}, #{fullName,jdbcType=VARCHAR},
+      #{exchange,jdbcType=CHAR}, #{industryId,jdbcType=INTEGER}, #{listDate,jdbcType=DATE},
+      #{status,jdbcType=TINYINT})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.fycx.entity.Company">
+    <selectKey keyProperty="companyId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into 上市公司
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="stockCode != null">股票代码,</if>
+      <if test="stockName != null">股票简称,</if>
+      <if test="fullName != null">公司全称,</if>
+      <if test="exchange != null">交易所,</if>
+      <if test="industryId != null">行业ID,</if>
+      <if test="listDate != null">上市日期,</if>
+      <if test="status != null">状态,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="stockCode != null">#{stockCode,jdbcType=VARCHAR},</if>
+      <if test="stockName != null">#{stockName,jdbcType=VARCHAR},</if>
+      <if test="fullName != null">#{fullName,jdbcType=VARCHAR},</if>
+      <if test="exchange != null">#{exchange,jdbcType=CHAR},</if>
+      <if test="industryId != null">#{industryId,jdbcType=INTEGER},</if>
+      <if test="listDate != null">#{listDate,jdbcType=DATE},</if>
+      <if test="status != null">#{status,jdbcType=TINYINT},</if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.fycx.entity.Company">
+    update 上市公司
+    <set>
+      <if test="stockCode != null">股票代码 = #{stockCode,jdbcType=VARCHAR},</if>
+      <if test="stockName != null">股票简称 = #{stockName,jdbcType=VARCHAR},</if>
+      <if test="fullName != null">公司全称 = #{fullName,jdbcType=VARCHAR},</if>
+      <if test="exchange != null">交易所 = #{exchange,jdbcType=CHAR},</if>
+      <if test="industryId != null">行业ID = #{industryId,jdbcType=INTEGER},</if>
+      <if test="listDate != null">上市日期 = #{listDate,jdbcType=DATE},</if>
+      <if test="status != null">状态 = #{status,jdbcType=TINYINT},</if>
+    </set>
+    where 公司ID = #{companyId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.fycx.entity.Company">
+    update 上市公司
+    set 股票代码 = #{stockCode,jdbcType=VARCHAR},
+      股票简称 = #{stockName,jdbcType=VARCHAR},
+      公司全称 = #{fullName,jdbcType=VARCHAR},
+      交易所 = #{exchange,jdbcType=CHAR},
+      行业ID = #{industryId,jdbcType=INTEGER},
+      上市日期 = #{listDate,jdbcType=DATE},
+      状态 = #{status,jdbcType=TINYINT}
+    where 公司ID = #{companyId,jdbcType=INTEGER}
+  </update>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectVOByPrimaryKey" parameterType="java.lang.Integer" resultMap="VOResultMap">
+    select <include refid="VO_Column_List"/>
+    from 上市公司 c
+    left join 行业分类 i on c.行业ID = i.行业ID
+    where c.公司ID = #{companyId,jdbcType=INTEGER}
+  </select>
+
+  <sql id="Condition_Where">
+    <where>
+      c.状态 = #{status,jdbcType=TINYINT}
+      <if test="keyword != null and keyword != ''">
+        and (c.股票代码 like concat('%', #{keyword}, '%')
+          or c.股票简称 like concat('%', #{keyword}, '%')
+          or c.公司全称 like concat('%', #{keyword}, '%'))
+      </if>
+      <if test="industryId != null">
+        and c.行业ID = #{industryId,jdbcType=INTEGER}
+      </if>
+    </where>
+  </sql>
+
+  <select id="selectByCondition" resultMap="VOResultMap">
+    select <include refid="VO_Column_List"/>
+    from 上市公司 c
+    left join 行业分类 i on c.行业ID = i.行业ID
+    <include refid="Condition_Where"/>
+    order by c.行业ID, c.股票代码
+    limit #{offset}, #{limit}
+  </select>
+
+  <select id="countByCondition" resultType="long">
+    select count(*)
+    from 上市公司 c
+    left join 行业分类 i on c.行业ID = i.行业ID
+    <include refid="Condition_Where"/>
+  </select>
+
+  <select id="selectAllVO" resultMap="VOResultMap">
+    select <include refid="VO_Column_List"/>
+    from 上市公司 c
+    left join 行业分类 i on c.行业ID = i.行业ID
+    order by c.行业ID, c.股票代码
+  </select>
+
+</mapper>
