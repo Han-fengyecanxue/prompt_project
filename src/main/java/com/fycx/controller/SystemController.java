@@ -34,7 +34,7 @@ public class SystemController {
     /** 根路径: 服务信息页(前端未部署时避免出现 404/报错) */
     @GetMapping(value = "/", produces = MediaType.TEXT_HTML_VALUE)
     public String index() {
-        String dbStatus = checkDb() ? "✅ 正常" : "❌ 连接失败";
+        String dbStatus = checkDb() ? "正常" : "连接失败";
         return "<!DOCTYPE html>\n"
                 + "<html lang=\"zh-CN\"><head><meta charset=\"UTF-8\">\n"
                 + "<title>上市公司财报解读与行业对标系统 - 后端服务</title>\n"
@@ -49,7 +49,7 @@ public class SystemController {
                 + ".badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:13px;margin-right:8px}"
                 + ".ok{background:#e6f4ea;color:#1e7e34}.warn{background:#fff3cd;color:#8a6d1d}"
                 + "</style></head><body>\n"
-                + "<h1>📊 上市公司财报解读与行业对标系统</h1>\n"
+                + "<h1>上市公司财报解读与行业对标系统</h1>\n"
                 + "<p><span class=\"badge ok\">后端服务运行中</span><span class=\"badge ok\">AI 模式: " + aiProvider + "</span>"
                 + "<span class=\"badge " + (checkDb() ? "ok" : "warn") + "\">数据库: " + dbStatus + "</span></p>\n"
                 + "<p>服务端口 8091 · 当前时间 " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "</p>\n"
