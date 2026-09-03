@@ -15,15 +15,15 @@ cd prompt_project
 ```
 
 1. **初始化数据库**(二选一):
-   - 一键脚本: `cd sql && init_db.bat`(按提示输入 MySQL 密码)
-   - 手动: 先执行 `sql/01_schema.sql` 建表, 再执行 `sql/02_seed_data.sql` 导入种子数据(3行业24家公司 2021-2025)
+   - 一键脚本: `cd sql && init_db.bat`(按提示输入 MySQL 密码, 默认导入**真实财报数据**; 输入 S 可选模拟演示数据)
+   - 手动: 先执行 `sql/01_schema.sql` 建表, 再执行 `sql/03_real_data.sql` 导入真实财报数据(3行业24家公司 2021-2025, 来源: 东方财富/新浪公开接口)
 2. **配置本地环境**: 复制 `src/main/resources/config/application-development.properties.example` 为
    `application-development.properties`, 填入你自己的 MySQL 密码(该文件已被 .gitignore 忽略, 不会提交)
 3. **启动后端**: `.\mvnw.cmd -DskipTests package && java -jar target\prompt_project-0.0.1-SNAPSHOT.jar`(端口 8091)
 4. **计算指标与行业对标**(首次必做): `curl -X POST http://localhost:8091/api/finance/recalc -H "Content-Type: application/json" -d "{}"`
 5. 浏览器访问 `http://localhost:8091/` 看到服务信息页即成功; 如需真实大模型, 在配置中填 `ai.api-key` 并把 `ai.provider` 改为 `openai`
 
-> 种子数据为模拟数据(量级近似真实财报), 接入真实数据只需替换 `财务原始数据` 表后重新执行 recalc。
+> 默认数据为**真实财报数据**(东方财富/新浪公开接口采集, 采集脚本 `sql/fetch_real_data.py`); `sql/02_seed_data.sql` 为早期模拟演示数据(量级近似, 非真实), 仅供功能演示备选。
 
 ---
 
@@ -39,9 +39,9 @@ cd prompt_project
 cd sql
 # 建库建表(幂等, 会重建所有表)
 mysql -uroot -p --default-character-set=utf8mb4 -e "source 01_schema.sql"
-# 生成并导入种子数据(3行业24家公司 2021-2025 财务数据, 量级近似真实财报的模拟数据)
-py -3 gen_seed.py
-mysql -uroot -p --default-character-set=utf8mb4 -e "source 02_seed_data.sql"
+# 导入真实财报数据(东方财富/新浪采集, 24家x2021-2025, 已与公开年报核对)
+mysql -uroot -p --default-character-set=utf8mb4 -e "source 03_real_data.sql"
+# (可选)若要模拟演示数据: py -3 gen_seed.py && mysql -uroot -p --default-character-set=utf8mb4 -e "source 02_seed_data.sql"
 ```
 
 ### 3. 启动后端
@@ -160,4 +160,5 @@ docs/             接口设计表
 - C27 医药制造: 恒瑞医药/药明康德/迈瑞医疗/片仔癀/云南白药/复星医药/智飞生物/长春高新
 - C15 酒饮料精制茶: 贵州茅台/五粮液/泸州老窖/山西汾酒/洋河股份/古井贡酒/今世缘/青岛啤酒
 
-> 数据说明: 种子数据为**量级近似真实财报的模拟数据**, 仅用于系统功能演示与实证验证; 接入真实数据时替换 `财务原始数据` 即可, 指标/对标/AI 解读全链路无需改动。
+> 数据说明: 默认数据为**真实财报数据**——由 `sql/fetch_real_data.py` 从东方财富数据中心接口(三大报表)、新浪财经日K(年末收盘价)采集, 覆盖 3 行业 24 家上市公司 2021—2025 年报,
+> 与公开年报核对无误(如贵州茅台 2023 营收 1476.94 亿元)。`sql/02_seed_data.sql` 为早期**模拟数据**(随机生成、量级近似), 仅作功能演示备选, 不再默认使用。
