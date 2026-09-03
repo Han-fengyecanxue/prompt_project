@@ -16,7 +16,7 @@ cd prompt_project
 
 1. **初始化数据库**(二选一):
    - 一键脚本: `cd sql && init_db.bat`(按提示输入 MySQL 密码, 自动导入**真实财报数据**)
-   - 手动: 先执行 `sql/01_schema.sql` 建表, 再执行 `sql/03_real_data.sql` 导入真实财报数据(3行业24家公司 2021-2025, 来源: 东方财富/新浪公开接口)
+   - 手动: 先执行 `sql/01_schema.sql` 建表(含行业/公司/科目/模板基础字典), 再执行 `sql/03_real_data.sql` 导入真实财报数据(3行业24家公司 2021-2025, 来源: 东方财富/新浪公开接口)
 2. **配置本地环境**: 复制 `src/main/resources/config/application-development.properties.example` 为
    `application-development.properties`, 填入你自己的 MySQL 密码(该文件已被 .gitignore 忽略, 不会提交)
 3. **启动后端**: `.\mvnw.cmd -DskipTests package && java -jar target\prompt_project-0.0.1-SNAPSHOT.jar`(端口 8091)
@@ -39,7 +39,7 @@ cd prompt_project
 cd sql
 # 建库建表(幂等, 会重建所有表)
 mysql -uroot -p --default-character-set=utf8mb4 -e "source 01_schema.sql"
-# 导入真实财报数据(东方财富/新浪采集, 24家x2021-2025, 已与公开年报核对)
+# 导入真实财报数据(东方财富/新浪采集, 24家x2021-2025, 已与公开年报核对; 01_schema 已含基础字典)
 mysql -uroot -p --default-character-set=utf8mb4 -e "source 03_real_data.sql"
 ```
 
