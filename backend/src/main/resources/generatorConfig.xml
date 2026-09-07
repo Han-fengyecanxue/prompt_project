@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN" "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+    <context id="financeContext" targetRuntime="MyBatis3">
+        <!-- 不生成注释 -->
+        <commentGenerator>
+            <property name="suppressAllComments" value="true"/>
+            <property name="suppressDate" value="true"/>
+        </commentGenerator>
+
+        <!-- 数据库连接 -->
+        <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/%E8%B4%A2%E6%8A%A5%E5%88%86%E6%9E%90%E7%B3%BB%E7%BB%9F?useSSL=false&amp;serverTimezone=Asia/Shanghai"
+                        userId="root"
+                        password="13390797306"/>
+
+        <!-- 实体类生成位置 -->
+        <javaModelGenerator targetPackage="com.fycx.entity"
+                            targetProject="src/main/java">
+            <property name="enableSubPackages" value="true"/>
+            <property name="trimStrings" value="true"/>
+            <property name="useActualColumnNames" value="true"/>
+        </javaModelGenerator>
+
+        <!-- Mapper XML 生成位置 -->
+        <sqlMapGenerator targetPackage="mapper"
+                         targetProject="src/main/resources">
+            <property name="enableSubPackages" value="true"/>
+        </sqlMapGenerator>
+
+        <!-- Mapper 接口生成位置 -->
+        <javaClientGenerator type="XMLMAPPER"
+                             targetPackage="com.fycx.mapper"
+                             targetProject="src/main/java">
+            <property name="enableSubPackages" value="true"/>
+        </javaClientGenerator>
+
+        <!-- ====== 表配置（共8张表，均禁用 Example 生成） ====== -->
+        <table tableName="listed_company" domainObjectName="Company"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="company_id" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="company_id" javaType="java.lang.Integer" property="companyId"/>
+            <columnOverride column="stock_code" javaType="java.lang.String" property="stockCode"/>
+            <columnOverride column="stock_name" javaType="java.lang.String" property="stockName"/>
+            <columnOverride column="full_name" javaType="java.lang.String" property="fullName"/>
+            <columnOverride column="exchange" javaType="java.lang.String" property="exchange"/>
+            <columnOverride column="industry_id" javaType="java.lang.Integer" property="industryId"/>
+            <columnOverride column="list_date" javaType="java.lang.String" property="listDate"/>
+            <columnOverride column="status" javaType="java.lang.Integer" property="status"/>
+        </table>
+
+        <table tableName="industry_category" domainObjectName="IndustryCategory"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="industry_id" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="industry_id" javaType="java.lang.Integer" property="industryId"/>
+            <columnOverride column="industry_code" javaType="java.lang.String" property="industryCode"/>
+            <columnOverride column="industry_name" javaType="java.lang.String" property="industryName"/>
+            <columnOverride column="parent_id" javaType="java.lang.Integer" property="parentId"/>
+            <columnOverride column="level" javaType="java.lang.Integer" property="level"/>
+        </table>
+
+        <table tableName="report_item" domainObjectName="ReportItem"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="item_id" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="item_id" javaType="java.lang.Integer" property="itemId"/>
+            <columnOverride column="item_code" javaType="java.lang.String" property="itemCode"/>
+            <columnOverride column="item_name" javaType="java.lang.String" property="itemName"/>
+            <columnOverride column="statement" javaType="java.lang.String" property="reportType"/>
+            <columnOverride column="unit" javaType="java.lang.String" property="unit"/>
+            <columnOverride column="display_order" javaType="java.lang.Integer" property="displayOrder"/>
+        </table>
+
+        <table tableName="financial_raw_data" domainObjectName="FinancialData"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="data_id" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="data_id" javaType="java.lang.Long" property="dataId"/>
+            <columnOverride column="company_id" javaType="java.lang.Integer" property="companyId"/>
+            <columnOverride column="fiscal_year" javaType="java.lang.Integer" property="fiscalYear"/>
+            <columnOverride column="report_period" javaType="java.lang.String" property="reportPeriod"/>
+            <columnOverride column="item_id" javaType="java.lang.Integer" property="itemId"/>
+            <columnOverride column="amount" javaType="java.math.BigDecimal" property="amount"/>
+            <columnOverride column="data_source" javaType="java.lang.String" property="source"/>
+            <columnOverride column="create_time" javaType="java.util.Date" property="createTime"/>
+        </table>
+
+        <table tableName="financial_indicator" domainObjectName="FinancialIndicator"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="indicator_id" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="indicator_id" javaType="java.lang.Long" property="indicatorId"/>
+            <columnOverride column="company_id" javaType="java.lang.Integer" property="companyId"/>
+            <columnOverride column="fiscal_year" javaType="java.lang.Integer" property="fiscalYear"/>
+            <columnOverride column="report_period" javaType="java.lang.String" property="reportPeriod"/>
+            <columnOverride column="indicator_code" javaType="java.lang.String" property="indicatorCode"/>
+            <columnOverride column="indicator_value" javaType="java.math.BigDecimal" property="indicatorValue"/>
+            <columnOverride column="unit" javaType="java.lang.String" property="unit"/>
+            <columnOverride column="calc_time" javaType="java.util.Date" property="calcTime"/>
+        </table>
+
+        <table tableName="industry_benchmark" domainObjectName="IndustryBenchmark"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="benchmark_id" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="benchmark_id" javaType="java.lang.Long" property="benchmarkId"/>
+            <columnOverride column="industry_id" javaType="java.lang.Integer" property="industryId"/>
+            <columnOverride column="fiscal_year" javaType="java.lang.Integer" property="fiscalYear"/>
+            <columnOverride column="report_period" javaType="java.lang.String" property="reportPeriod"/>
+            <columnOverride column="indicator_code" javaType="java.lang.String" property="indicatorCode"/>
+            <columnOverride column="avg_value" javaType="java.math.BigDecimal" property="avgValue"/>
+            <columnOverride column="median_value" javaType="java.math.BigDecimal" property="medianValue"/>
+            <columnOverride column="std_dev" javaType="java.math.BigDecimal" property="stdDev"/>
+            <columnOverride column="P25" javaType="java.math.BigDecimal" property="p25"/>
+            <columnOverride column="P75" javaType="java.math.BigDecimal" property="p75"/>
+            <columnOverride column="company_count" javaType="java.lang.Integer" property="companyCount"/>
+        </table>
+
+        <table tableName="valuation_snapshot" domainObjectName="ValuationSnapshot"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="snapshot_id" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="snapshot_id" javaType="java.lang.Long" property="snapshotId"/>
+            <columnOverride column="company_id" javaType="java.lang.Integer" property="companyId"/>
+            <columnOverride column="snapshot_date" javaType="java.util.Date" property="snapshotDate"/>
+            <columnOverride column="close_price" javaType="java.math.BigDecimal" property="closePrice"/>
+            <columnOverride column="market_cap" javaType="java.math.BigDecimal" property="marketCap"/>
+        </table>
+
+        <table tableName="prompt_template" domainObjectName="PromptTemplate"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableDeleteByExample="false"
+               enableSelectByExample="false">
+            <generatedKey column="template_id" sqlStatement="MySql" identity="true"/>
+            <columnOverride column="template_id" javaType="java.lang.Integer" property="templateId"/>
+            <columnOverride column="template_type" javaType="java.lang.String" property="templateType"/>
+            <columnOverride column="template_content" javaType="java.lang.String" property="templateContent"/>
+            <columnOverride column="version" javaType="java.lang.String" property="version"/>
+            <columnOverride column="enabled" javaType="java.lang.Integer" property="enabled"/>
+        </table>
+
+    </context>
+</generatorConfiguration>

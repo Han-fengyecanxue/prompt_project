@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.IndustryCategoryMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.IndustryCategory">
+    <id column="industry_id" jdbcType="INTEGER" property="industryId"/>
+    <result column="industry_code" jdbcType="VARCHAR" property="industryCode"/>
+    <result column="industry_name" jdbcType="VARCHAR" property="industryName"/>
+    <result column="parent_id" jdbcType="INTEGER" property="parentId"/>
+    <result column="level" jdbcType="TINYINT" property="level"/>
+  </resultMap>
+
+  <resultMap id="VOResultMap" type="com.fycx.controller.response.IndustryVO">
+    <id column="industry_id" jdbcType="INTEGER" property="industryId"/>
+    <result column="industry_code" jdbcType="VARCHAR" property="industryCode"/>
+    <result column="industry_name" jdbcType="VARCHAR" property="industryName"/>
+    <result column="company_count" jdbcType="INTEGER" property="companyCount"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    industry_id, industry_code, industry_name, parent_id, level
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from industry_category
+    where industry_id = #{industryId,jdbcType=INTEGER}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from industry_category
+    where industry_id = #{industryId,jdbcType=INTEGER}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.IndustryCategory">
+    <selectKey keyProperty="industryId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into industry_category (industry_code, industry_name, parent_id, level)
+    values (#{industryCode,jdbcType=VARCHAR}, #{industryName,jdbcType=VARCHAR},
+      #{parentId,jdbcType=INTEGER}, #{level,jdbcType=TINYINT})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.fycx.entity.IndustryCategory">
+    <selectKey keyProperty="industryId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into industry_category
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="industryCode != null">industry_code,</if>
+      <if test="industryName != null">industry_name,</if>
+      <if test="parentId != null">parent_id,</if>
+      <if test="level != null">level,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="industryCode != null">#{industryCode,jdbcType=VARCHAR},</if>
+      <if test="industryName != null">#{industryName,jdbcType=VARCHAR},</if>
+      <if test="parentId != null">#{parentId,jdbcType=INTEGER},</if>
+      <if test="level != null">#{level,jdbcType=TINYINT},</if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.fycx.entity.IndustryCategory">
+    update industry_category
+    <set>
+      <if test="industryCode != null">industry_code = #{industryCode,jdbcType=VARCHAR},</if>
+      <if test="industryName != null">industry_name = #{industryName,jdbcType=VARCHAR},</if>
+      <if test="parentId != null">parent_id = #{parentId,jdbcType=INTEGER},</if>
+      <if test="level != null">level = #{level,jdbcType=TINYINT},</if>
+    </set>
+    where industry_id = #{industryId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.fycx.entity.IndustryCategory">
+    update industry_category
+    set industry_code = #{industryCode,jdbcType=VARCHAR},
+      industry_name = #{industryName,jdbcType=VARCHAR},
+      parent_id = #{parentId,jdbcType=INTEGER},
+      level = #{level,jdbcType=TINYINT}
+    where industry_id = #{industryId,jdbcType=INTEGER}
+  </update>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectAllWithCount" resultMap="VOResultMap">
+    select i.industry_id, i.industry_code, i.industry_name, count(c.company_id) as company_count
+    from industry_category i
+    left join listed_company c on i.industry_id = c.industry_id
+    group by i.industry_id, i.industry_code, i.industry_name
+    order by i.industry_id
+  </select>
+
+</mapper>

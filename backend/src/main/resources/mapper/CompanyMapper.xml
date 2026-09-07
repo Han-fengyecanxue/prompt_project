@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.CompanyMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.Company">
+    <id column="company_id" jdbcType="INTEGER" property="companyId"/>
+    <result column="stock_code" jdbcType="VARCHAR" property="stockCode"/>
+    <result column="stock_name" jdbcType="VARCHAR" property="stockName"/>
+    <result column="full_name" jdbcType="VARCHAR" property="fullName"/>
+    <result column="exchange" jdbcType="CHAR" property="exchange"/>
+    <result column="industry_id" jdbcType="INTEGER" property="industryId"/>
+    <result column="list_date" jdbcType="DATE" property="listDate"/>
+    <result column="status" jdbcType="TINYINT" property="status"/>
+  </resultMap>
+
+  <resultMap id="VOResultMap" type="com.fycx.controller.response.CompanyVO">
+    <id column="company_id" jdbcType="INTEGER" property="companyId"/>
+    <result column="stock_code" jdbcType="VARCHAR" property="stockCode"/>
+    <result column="stock_name" jdbcType="VARCHAR" property="stockName"/>
+    <result column="full_name" jdbcType="VARCHAR" property="fullName"/>
+    <result column="exchange" jdbcType="CHAR" property="exchange"/>
+    <result column="industry_id" jdbcType="INTEGER" property="industryId"/>
+    <result column="industry_name" jdbcType="VARCHAR" property="industryName"/>
+    <result column="list_date" jdbcType="DATE" property="listDate"/>
+    <result column="status" jdbcType="TINYINT" property="status"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    company_id, stock_code, stock_name, full_name, exchange, industry_id, list_date, status
+  </sql>
+
+  <sql id="VO_Column_List">
+    c.company_id, c.stock_code, c.stock_name, c.full_name, c.exchange, c.industry_id, i.industry_name, c.list_date, c.status
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from listed_company
+    where company_id = #{companyId,jdbcType=INTEGER}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from listed_company
+    where company_id = #{companyId,jdbcType=INTEGER}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.Company">
+    <selectKey keyProperty="companyId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into listed_company (stock_code, stock_name, full_name, exchange, industry_id, list_date, status)
+    values (#{stockCode,jdbcType=VARCHAR}, #{stockName,jdbcType=VARCHAR}, #{fullName,jdbcType=VARCHAR},
+      #{exchange,jdbcType=CHAR}, #{industryId,jdbcType=INTEGER}, #{listDate,jdbcType=DATE},
+      #{status,jdbcType=TINYINT})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.fycx.entity.Company">
+    <selectKey keyProperty="companyId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into listed_company
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="stockCode != null">stock_code,</if>
+      <if test="stockName != null">stock_name,</if>
+      <if test="fullName != null">full_name,</if>
+      <if test="exchange != null">exchange,</if>
+      <if test="industryId != null">industry_id,</if>
+      <if test="listDate != null">list_date,</if>
+      <if test="status != null">status,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="stockCode != null">#{stockCode,jdbcType=VARCHAR},</if>
+      <if test="stockName != null">#{stockName,jdbcType=VARCHAR},</if>
+      <if test="fullName != null">#{fullName,jdbcType=VARCHAR},</if>
+      <if test="exchange != null">#{exchange,jdbcType=CHAR},</if>
+      <if test="industryId != null">#{industryId,jdbcType=INTEGER},</if>
+      <if test="listDate != null">#{listDate,jdbcType=DATE},</if>
+      <if test="status != null">#{status,jdbcType=TINYINT},</if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.fycx.entity.Company">
+    update listed_company
+    <set>
+      <if test="stockCode != null">stock_code = #{stockCode,jdbcType=VARCHAR},</if>
+      <if test="stockName != null">stock_name = #{stockName,jdbcType=VARCHAR},</if>
+      <if test="fullName != null">full_name = #{fullName,jdbcType=VARCHAR},</if>
+      <if test="exchange != null">exchange = #{exchange,jdbcType=CHAR},</if>
+      <if test="industryId != null">industry_id = #{industryId,jdbcType=INTEGER},</if>
+      <if test="listDate != null">list_date = #{listDate,jdbcType=DATE},</if>
+      <if test="status != null">status = #{status,jdbcType=TINYINT},</if>
+    </set>
+    where company_id = #{companyId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.fycx.entity.Company">
+    update listed_company
+    set stock_code = #{stockCode,jdbcType=VARCHAR},
+      stock_name = #{stockName,jdbcType=VARCHAR},
+      full_name = #{fullName,jdbcType=VARCHAR},
+      exchange = #{exchange,jdbcType=CHAR},
+      industry_id = #{industryId,jdbcType=INTEGER},
+      list_date = #{listDate,jdbcType=DATE},
+      status = #{status,jdbcType=TINYINT}
+    where company_id = #{companyId,jdbcType=INTEGER}
+  </update>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectVOByPrimaryKey" parameterType="java.lang.Integer" resultMap="VOResultMap">
+    select <include refid="VO_Column_List"/>
+    from listed_company c
+    left join industry_category i on c.industry_id = i.industry_id
+    where c.company_id = #{companyId,jdbcType=INTEGER}
+  </select>
+
+  <sql id="Condition_Where">
+    <where>
+      c.status = #{status,jdbcType=TINYINT}
+      <if test="keyword != null and keyword != ''">
+        and (c.stock_code like concat('%', #{keyword}, '%')
+          or c.stock_name like concat('%', #{keyword}, '%')
+          or c.full_name like concat('%', #{keyword}, '%'))
+      </if>
+      <if test="industryId != null">
+        and c.industry_id = #{industryId,jdbcType=INTEGER}
+      </if>
+    </where>
+  </sql>
+
+  <select id="selectByCondition" resultMap="VOResultMap">
+    select <include refid="VO_Column_List"/>
+    from listed_company c
+    left join industry_category i on c.industry_id = i.industry_id
+    <include refid="Condition_Where"/>
+    order by c.industry_id, c.stock_code
+    limit #{offset}, #{limit}
+  </select>
+
+  <select id="countByCondition" resultType="long">
+    select count(*)
+    from listed_company c
+    left join industry_category i on c.industry_id = i.industry_id
+    <include refid="Condition_Where"/>
+  </select>
+
+  <select id="selectAllVO" resultMap="VOResultMap">
+    select <include refid="VO_Column_List"/>
+    from listed_company c
+    left join industry_category i on c.industry_id = i.industry_id
+    order by c.industry_id, c.stock_code
+  </select>
+
+</mapper>

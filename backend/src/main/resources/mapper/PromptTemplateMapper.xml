@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.PromptTemplateMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.PromptTemplate">
+    <id column="template_id" jdbcType="INTEGER" property="templateId"/>
+    <result column="template_type" jdbcType="VARCHAR" property="templateType"/>
+    <result column="template_content" jdbcType="LONGVARCHAR" property="templateContent"/>
+    <result column="version" jdbcType="VARCHAR" property="version"/>
+    <result column="enabled" jdbcType="TINYINT" property="enabled"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    template_id, template_type, template_content, version, enabled
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from prompt_template
+    where template_id = #{templateId,jdbcType=INTEGER}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from prompt_template
+    where template_id = #{templateId,jdbcType=INTEGER}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.PromptTemplate">
+    <selectKey keyProperty="templateId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into prompt_template (template_type, template_content, version, enabled)
+    values (#{templateType,jdbcType=VARCHAR}, #{templateContent,jdbcType=LONGVARCHAR},
+      #{version,jdbcType=VARCHAR}, #{enabled,jdbcType=TINYINT})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.fycx.entity.PromptTemplate">
+    <selectKey keyProperty="templateId" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into prompt_template
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="templateType != null">template_type,</if>
+      <if test="templateContent != null">template_content,</if>
+      <if test="version != null">version,</if>
+      <if test="enabled != null">enabled,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="templateType != null">#{templateType,jdbcType=VARCHAR},</if>
+      <if test="templateContent != null">#{templateContent,jdbcType=LONGVARCHAR},</if>
+      <if test="version != null">#{version,jdbcType=VARCHAR},</if>
+      <if test="enabled != null">#{enabled,jdbcType=TINYINT},</if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.fycx.entity.PromptTemplate">
+    update prompt_template
+    <set>
+      <if test="templateType != null">template_type = #{templateType,jdbcType=VARCHAR},</if>
+      <if test="templateContent != null">template_content = #{templateContent,jdbcType=LONGVARCHAR},</if>
+      <if test="version != null">version = #{version,jdbcType=VARCHAR},</if>
+      <if test="enabled != null">enabled = #{enabled,jdbcType=TINYINT},</if>
+    </set>
+    where template_id = #{templateId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.fycx.entity.PromptTemplate">
+    update prompt_template
+    set template_type = #{templateType,jdbcType=VARCHAR},
+      template_content = #{templateContent,jdbcType=LONGVARCHAR},
+      version = #{version,jdbcType=VARCHAR},
+      enabled = #{enabled,jdbcType=TINYINT}
+    where template_id = #{templateId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.fycx.entity.PromptTemplate">
+    update prompt_template
+    set template_type = #{templateType,jdbcType=VARCHAR},
+      version = #{version,jdbcType=VARCHAR},
+      enabled = #{enabled,jdbcType=TINYINT}
+    where template_id = #{templateId,jdbcType=INTEGER}
+  </update>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectEnabled" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from prompt_template
+    where enabled = 1
+    order by template_id
+  </select>
+
+</mapper>

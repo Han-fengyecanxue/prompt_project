@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fycx.mapper.FinancialIndicatorMapper">
+
+  <resultMap id="BaseResultMap" type="com.fycx.entity.FinancialIndicator">
+    <id column="indicator_id" jdbcType="BIGINT" property="indicatorId"/>
+    <result column="company_id" jdbcType="INTEGER" property="companyId"/>
+    <result column="fiscal_year" jdbcType="SMALLINT" property="fiscalYear"/>
+    <result column="report_period" jdbcType="VARCHAR" property="reportPeriod"/>
+    <result column="indicator_code" jdbcType="VARCHAR" property="indicatorCode"/>
+    <result column="indicator_value" jdbcType="DECIMAL" property="indicatorValue"/>
+    <result column="unit" jdbcType="VARCHAR" property="unit"/>
+    <result column="calc_time" jdbcType="TIMESTAMP" property="calcTime"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    indicator_id, company_id, fiscal_year, report_period, indicator_code, indicator_value, unit, calc_time
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from financial_indicator
+    where indicator_id = #{indicatorId,jdbcType=BIGINT}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from financial_indicator
+    where indicator_id = #{indicatorId,jdbcType=BIGINT}
+  </delete>
+
+  <insert id="insert" parameterType="com.fycx.entity.FinancialIndicator">
+    <selectKey keyProperty="indicatorId" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into financial_indicator (company_id, fiscal_year, report_period, indicator_code, indicator_value, unit, calc_time)
+    values (#{companyId,jdbcType=INTEGER}, #{fiscalYear,jdbcType=SMALLINT}, #{reportPeriod,jdbcType=VARCHAR},
+      #{indicatorCode,jdbcType=VARCHAR}, #{indicatorValue,jdbcType=DECIMAL}, #{unit,jdbcType=VARCHAR},
+      #{calcTime,jdbcType=TIMESTAMP})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.fycx.entity.FinancialIndicator">
+    <selectKey keyProperty="indicatorId" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into financial_indicator
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="companyId != null">company_id,</if>
+      <if test="fiscalYear != null">fiscal_year,</if>
+      <if test="reportPeriod != null">report_period,</if>
+      <if test="indicatorCode != null">indicator_code,</if>
+      <if test="indicatorValue != null">indicator_value,</if>
+      <if test="unit != null">unit,</if>
+      <if test="calcTime != null">calc_time,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="companyId != null">#{companyId,jdbcType=INTEGER},</if>
+      <if test="fiscalYear != null">#{fiscalYear,jdbcType=SMALLINT},</if>
+      <if test="reportPeriod != null">#{reportPeriod,jdbcType=VARCHAR},</if>
+      <if test="indicatorCode != null">#{indicatorCode,jdbcType=VARCHAR},</if>
+      <if test="indicatorValue != null">#{indicatorValue,jdbcType=DECIMAL},</if>
+      <if test="unit != null">#{unit,jdbcType=VARCHAR},</if>
+      <if test="calcTime != null">#{calcTime,jdbcType=TIMESTAMP},</if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.fycx.entity.FinancialIndicator">
+    update financial_indicator
+    <set>
+      <if test="companyId != null">company_id = #{companyId,jdbcType=INTEGER},</if>
+      <if test="fiscalYear != null">fiscal_year = #{fiscalYear,jdbcType=SMALLINT},</if>
+      <if test="reportPeriod != null">report_period = #{reportPeriod,jdbcType=VARCHAR},</if>
+      <if test="indicatorCode != null">indicator_code = #{indicatorCode,jdbcType=VARCHAR},</if>
+      <if test="indicatorValue != null">indicator_value = #{indicatorValue,jdbcType=DECIMAL},</if>
+      <if test="unit != null">unit = #{unit,jdbcType=VARCHAR},</if>
+      <if test="calcTime != null">calc_time = #{calcTime,jdbcType=TIMESTAMP},</if>
+    </set>
+    where indicator_id = #{indicatorId,jdbcType=BIGINT}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.fycx.entity.FinancialIndicator">
+    update financial_indicator
+    set company_id = #{companyId,jdbcType=INTEGER},
+      fiscal_year = #{fiscalYear,jdbcType=SMALLINT},
+      report_period = #{reportPeriod,jdbcType=VARCHAR},
+      indicator_code = #{indicatorCode,jdbcType=VARCHAR},
+      indicator_value = #{indicatorValue,jdbcType=DECIMAL},
+      unit = #{unit,jdbcType=VARCHAR},
+      calc_time = #{calcTime,jdbcType=TIMESTAMP}
+    where indicator_id = #{indicatorId,jdbcType=BIGINT}
+  </update>
+
+  <!-- ========== 自定义查询 ========== -->
+
+  <select id="selectByCompanyYear" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from financial_indicator
+    where company_id = #{companyId,jdbcType=INTEGER}
+      and fiscal_year = #{fiscalYear,jdbcType=SMALLINT}
+      and report_period = #{reportPeriod,jdbcType=VARCHAR}
+    order by indicator_code
+  </select>
+
+  <select id="selectByCompanyAllYears" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from financial_indicator
+    where company_id = #{companyId,jdbcType=INTEGER}
+    order by fiscal_year, indicator_code
+  </select>
+
+  <select id="selectByYear" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"/>
+    from financial_indicator
+    where fiscal_year = #{fiscalYear,jdbcType=SMALLINT}
+      and report_period = #{reportPeriod,jdbcType=VARCHAR}
+  </select>
+
+  <select id="selectByIndustryYear" resultMap="BaseResultMap">
+    select i.indicator_id, i.company_id, i.fiscal_year, i.report_period, i.indicator_code, i.indicator_value, i.unit, i.calc_time
+    from financial_indicator i
+    join listed_company c on i.company_id = c.company_id
+    where c.industry_id = #{industryId,jdbcType=INTEGER}
+      and i.fiscal_year = #{fiscalYear,jdbcType=SMALLINT}
+      and i.report_period = #{reportPeriod,jdbcType=VARCHAR}
+  </select>
+
+  <delete id="deleteAll">
+    delete from financial_indicator
+  </delete>
+
+  <insert id="insertBatch" parameterType="java.util.List">
+    insert into financial_indicator (company_id, fiscal_year, report_period, indicator_code, indicator_value, unit, calc_time)
+    values
+    <foreach collection="list" item="row" separator=",">
+      (#{row.companyId,jdbcType=INTEGER}, #{row.fiscalYear,jdbcType=SMALLINT}, #{row.reportPeriod,jdbcType=VARCHAR},
+       #{row.indicatorCode,jdbcType=VARCHAR}, #{row.indicatorValue,jdbcType=DECIMAL}, #{row.unit,jdbcType=VARCHAR},
+       #{row.calcTime,jdbcType=TIMESTAMP})
+    </foreach>
+  </insert>
+
+</mapper>
