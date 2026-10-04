@@ -16,7 +16,7 @@
   - report_period: 年报(每年取 12-31/当年最后一份报表, 按 REPORT_DATE 取最大, 不再误取一季报)
   - unit: 元 (接口原生unit)
   - 科目 3: 东财 OPERATE_PROFIT(营业利润) 直接入库(与report_item表口径一致)
-  - 缺失科目: 字段缺失或为 null -> 按 0 入库并写入缺失清单(需人工确认)
+    - 缺失科目: 字段缺失或为 null -> 不入库并写入缺失清单; 有效的数值0仍正常入库
   - 年末估值: close_price = 该年最后交易日不复权close_price(新浪日K, 失败自动降级腾讯/东财);
               market_cap = close_price x 当年年报实收资本(股本); 股本缺失时用腾讯当前总股本近似(告警)
   - 异常检测: 营收/归母净利同比波动 >100% 告警
@@ -226,6 +226,15 @@ def pick_value(rec, candidates):
     return None
 
 
+def append_report_item(rows, missing_fields, company_id, year, item_id, value,
+                       stock_code, statement, item_code):
+    """保留真实零值, 缺失值不入库并记录, 避免把未知数据伪装成零。"""
+    if value is None:
+        missing_fields.append((stock_code, year, statement, item_code))
+        return
+    rows.append((company_id, year, item_id, round(float(value), 2)))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true", help="只抓取并预览, 不生成文件")
@@ -243,7 +252,7 @@ def main():
     rows = []          # (companyId, year, itemId, amount)
     snaps = []         # (companyId, date, close, marketCap)
     missing = []       # (company, year, statement, field)
-    zero_filled = []   # 字段缺失/null -> 按0入库的记录
+    missing_fields = []
     warnings = []
 
     for cid, code, name in companies:
@@ -296,10 +305,8 @@ def main():
                     continue
                 for item_code, candidates in mapping.items():
                     val = pick_value(rec, candidates)
-                    if val is None:
-                        zero_filled.append((code, year, st, item_code))
-                        val = 0.0
-                    rows.append((cid, int(year), ITEM_ID[item_code], round(float(val), 2)))
+                    append_report_item(rows, missing_fields, cid, int(year), ITEM_ID[item_code],
+                                       val, code, st, item_code)
             # valuation_snapshot: 年末(最后交易日)close_price x 当年股本
             if not args.debug:
                 close = year_end_close(klines, int(year))
@@ -313,11 +320,11 @@ def main():
     # ==================== 输出 ====================
     print("\n====== 汇总 ======")
     exp = len(companies) * len(YEARS) * 22
-    print("抓取科目数据行数: {} (期望 {} )".format(len(rows), exp))
+    print("抓取科目数据行数: {} (理论上限 {} )".format(len(rows), exp))
     print("valuation_snapshot行数: {} (期望 {} )".format(len(snaps), len(companies) * len(YEARS)))
-    if zero_filled:
-        print("\n[按0处理] {} 条(科目为空/缺失 -> 0, 建议人工抽查):".format(len(zero_filled)))
-        for m in zero_filled[:30]:
+    if missing_fields:
+        print("\n[缺失科目] {} 条(未写入, 相关指标将不计算):".format(len(missing_fields)))
+        for m in missing_fields[:30]:
             print("  ", m)
     if missing:
         print("\n[缺失报告] {} 条:".format(len(missing)))

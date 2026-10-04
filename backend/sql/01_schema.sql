@@ -159,6 +159,8 @@ CREATE TABLE `ai_report` (
   `user_question` text,
   `ai_answer` mediumtext NOT NULL,
   `context_json` mediumtext COMMENT '注入Prompt的数据上下文(JSON), 便于审计模型是否捏造数据',
+  `numeric_accuracy` decimal(5,2) DEFAULT NULL COMMENT '数值引用准确率(%): 报告可溯源数字占比',
+  `suspicious_count` int(11) DEFAULT NULL COMMENT '可疑(疑似幻觉)数字数量',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`report_id`),
   KEY `company_id` (`company_id`),

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fycx.common.ErrorCodeEnums;
 import com.fycx.common.HandleException;
 import com.fycx.common.IndicatorDef;
+import com.fycx.common.ReportValidator;
 import com.fycx.controller.request.AiReportRequest;
 import com.fycx.controller.request.ChatRequest;
 import com.fycx.controller.request.ChatTurn;
@@ -105,9 +106,10 @@ public class AiServiceImpl implements AiService {
         String userPrompt = composeUserPrompt(benchmark, req.getFiscalYear(), req.getExtraInstruction());
 
         String answer = callLlm(systemPrompt, userPrompt, Collections.emptyList(), benchmark);
+        var vr = validateAndFix(systemPrompt, userPrompt, Collections.emptyList(), benchmark, dataJson, answer);
 
         return saveReport(benchmark.getCompany(), req.getFiscalYear(), reportPeriod, "brief",
-                "生成" + req.getFiscalYear() + "年度财报解读简报", answer, dataJson);
+                "生成" + req.getFiscalYear() + "年度财报解读简报", vr.getAnswer(), dataJson, vr.getResult());
     }
 
     // ================== 对话 ==================
@@ -134,9 +136,10 @@ public class AiServiceImpl implements AiService {
 
         List<ChatTurn> history = req.getHistory() == null ? Collections.emptyList() : req.getHistory();
         String answer = callLlm(systemPrompt, userPrompt, history, benchmark);
+        var vr = validateAndFix(systemPrompt, userPrompt, history, benchmark, dataJson, answer);
 
         return saveReport(benchmark.getCompany(), req.getFiscalYear(), reportPeriod, "chat",
-                req.getQuestion(), answer, dataJson);
+                req.getQuestion(), vr.getAnswer(), dataJson, vr.getResult());
     }
 
     // ================== 报告记录 ==================
@@ -480,8 +483,54 @@ public class AiServiceImpl implements AiService {
 
     // ================== 保存 ==================
 
+    /** 生成后数值校验: 可疑数>0 且为真实LLM时触发一次"修正重试"; 返回最终答案与校验结果 */
+    private ValidatedAnswer validateAndFix(String systemPrompt, String userPrompt, List<ChatTurn> history,
+                                           BenchmarkVO benchmark, String dataJson, String answer) {
+        ReportValidator.Result result = ReportValidator.validate(answer, dataJson);
+        boolean realLlm = "openai".equalsIgnoreCase(provider) && StringUtils.hasText(apiKey);
+        if (realLlm && result.getSuspiciousCount() > 0) {
+            String fixPrompt = userPrompt
+                    + "\n\n【修正要求】系统检测到上一版输出中有 " + result.getSuspiciousCount()
+                    + " 个数字不在注入数据中(疑似幻觉)："
+                    + result.getSuspicious().stream().limit(5).map(BigDecimal::toPlainString)
+                    .collect(Collectors.joining(", "))
+                    + "。请严格按照【数据注入】中的数值重写报告，严禁出现注入数据之外的任何数字。";
+            try {
+                String retry = callOpenAICompatible(systemPrompt, fixPrompt, history);
+                ReportValidator.Result retryResult = ReportValidator.validate(retry, dataJson);
+                if (retryResult.getSuspiciousCount() < result.getSuspiciousCount()) {
+                    log.info("数值幻觉修正: 可疑数 {} -> {}", result.getSuspiciousCount(), retryResult.getSuspiciousCount());
+                    return new ValidatedAnswer(retry, retryResult);
+                }
+            } catch (Exception e) {
+                log.warn("数值修正重试失败: {}", e.getMessage());
+            }
+        }
+        return new ValidatedAnswer(answer, result);
+    }
+
+    /** 答案 + 校验结果的封装 */
+    private static final class ValidatedAnswer {
+        private final String answer;
+        private final ReportValidator.Result result;
+
+        ValidatedAnswer(String answer, ReportValidator.Result result) {
+            this.answer = answer;
+            this.result = result;
+        }
+
+        String getAnswer() {
+            return answer;
+        }
+
+        ReportValidator.Result getResult() {
+            return result;
+        }
+    }
+
     private AiReport saveReport(CompanyVO company, Integer fiscalYear, String reportPeriod,
-                                String reportType, String question, String answer, String context) {
+                                String reportType, String question, String answer, String context,
+                                ReportValidator.Result vr) {
         AiReport report = new AiReport();
         report.setCompanyId(company.getCompanyId());
         report.setFiscalYear(fiscalYear);
@@ -490,6 +539,10 @@ public class AiServiceImpl implements AiService {
         report.setUserQuestion(question);
         report.setAiAnswer(answer);
         report.setContext(context);
+        if (vr != null) {
+            report.setNumericAccuracy(BigDecimal.valueOf(vr.getAccuracy()));
+            report.setSuspiciousCount(vr.getSuspiciousCount());
+        }
         report.setCreateTime(new Date());
         aiReportMapper.insert(report);
         return report;

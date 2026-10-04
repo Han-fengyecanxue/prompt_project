@@ -1,11 +1,12 @@
 # 基于Prompt工程的上市公司财报解读与行业对标系统
 
-省级大学生创新创业训练计划项目(淮阴师范学院 · 计算机科学与技术)
+省级大学生创新创业训练计划项目
 
 **架构**: Spring Boot 3.4 + MyBatis + MySQL 5.7 + Druid + Vue3 + ECharts
 **核心思想**: 双层解耦 —— 底层由系统精确计算财务指标与行业对标(可溯源、可验证), 上层通过"角色设定+数据注入+输出约束"三层 Prompt 驱动大模型生成自然语言解读报告(防幻觉)。
 
 > 📘 新手教程: `docs/上手指南_Prompt与模型.md`(Prompt 工程 / 云端 API / 本地模型 Ollama / 文生图 Prompt)
+
 ---
 
 ## 零、协作者上手指南(从 GitHub Clone 之后)
@@ -31,11 +32,13 @@ cd prompt_project
 ## 一、快速启动
 
 ### 1. 环境要求
+
 - JDK 17+ (本项目已在 JDK 25 上验证)
 - Maven (项目自带 `mvnw`, 无需全局安装)
 - MySQL 5.7+ (本地 3306, 默认账号 root/13390797306, 可在配置中修改)
 
 ### 2. 初始化数据库
+
 ```bash
 cd sql
 # 建库建表(幂等, 会重建所有表)
@@ -45,6 +48,7 @@ mysql -uroot -p --default-character-set=utf8mb4 -e "source 03_real_data.sql"
 ```
 
 ### 3. 启动后端
+
 ```bash
 # Windows
 .\mvnw.cmd -DskipTests package
@@ -53,15 +57,20 @@ java -jar target\prompt_project-0.0.1-SNAPSHOT.jar
 ```
 
 ### 4. 计算指标与industry_benchmark
+
 ```bash
 curl -X POST http://localhost:8091/api/finance/recalc -H "Content-Type: application/json" -d "{}"
 ```
+
 首次导入数据后必须执行一次重算(或数据变更后重新执行), 系统会自动:
+
 1. 由原始数据计算 12 项标准化financial_indicator → 写入 `financial_indicator`
 2. 按 行业×年度×指标 计算均值/中位数/标准差/P25/P75 → 写入 `industry_benchmark`
 
 ### 5. 配置大模型 (可选)
+
 编辑 `src/main/resources/config/application-development.properties`:
+
 ```properties
 # mock: 离线演示模式(无需Key, 由规则生成确定性报告)
 # openai: 任意 OpenAI 兼容接口 (DeepSeek/通义千问/智谱/OpenAI 等)
@@ -75,30 +84,31 @@ ai.model=deepseek-chat
 
 ## 二、数据库设计 (库名: financial_analysis)
 
-| 表名 | 说明 | 关键字段 |
-|---|---|---|
-| `industry_category` | 行业(证监会代码) | 行业ID, 行业代码, 行业名称 |
-| `listed_company` | 公司基础信息 | 公司ID, 股票代码, 股票简称, 行业ID |
-| `report_item` | 财报科目字典(22项) | 项目编码(operating_revenue 等) |
-| `financial_raw_data` | 公司×年度×科目的金额(元) | 公司ID, 财年, 项目ID, 金额 |
-| `financial_indicator` | 标准化指标(计算引擎产出) | 公司ID, 财年, 指标编码, 指标值, 单位 |
-| `industry_benchmark` | 行业统计基准 | 行业ID, 财年, 指标编码, 均值/中位数/标准差/P25/P75 |
-| `prompt_template` | 三层Prompt模板 | 模板类型(角色设定/数据注入/输出约束) |
-| `valuation_snapshot` | 收盘价/总市值(计算PE/PB) | 公司ID, 快照日期, 收盘价, 总市值 |
-| `ai_report` | AI简报/对话记录(防幻觉审计) | 公司ID, 报告类型, AI回答, 上下文JSON |
+| 表名                    | 说明                        | 关键字段                                           |
+| ----------------------- | --------------------------- | -------------------------------------------------- |
+| `industry_category`   | 行业(证监会代码)            | 行业ID, 行业代码, 行业名称                         |
+| `listed_company`      | 公司基础信息                | 公司ID, 股票代码, 股票简称, 行业ID                 |
+| `report_item`         | 财报科目字典(22项)          | 项目编码(operating_revenue 等)                     |
+| `financial_raw_data`  | 公司×年度×科目的金额(元)  | 公司ID, 财年, 项目ID, 金额                         |
+| `financial_indicator` | 标准化指标(计算引擎产出)    | 公司ID, 财年, 指标编码, 指标值, 单位               |
+| `industry_benchmark`  | 行业统计基准                | 行业ID, 财年, 指标编码, 均值/中位数/标准差/P25/P75 |
+| `prompt_template`     | 三层Prompt模板              | 模板类型(角色设定/数据注入/输出约束)               |
+| `valuation_snapshot`  | 收盘价/总市值(计算PE/PB)    | 公司ID, 快照日期, 收盘价, 总市值                   |
+| `ai_report`           | AI简报/对话记录(防幻觉审计) | 公司ID, 报告类型, AI回答, 上下文JSON               |
 
 ### 指标体系 (12 项, 详见 `IndicatorDef`)
 
-| 维度 | 指标 | 方向 |
-|---|---|---|
-| 盈利能力 | roe 净资产收益率 / gross_margin 毛利率 / net_margin_parent 归母净利率 | 越高越好 |
-| 成长性 | revenue_growth 营收增长率 / profit_growth 归母净利润增长率 | 越高越好 |
+| 维度     | 指标                                                                             | 方向                         |
+| -------- | -------------------------------------------------------------------------------- | ---------------------------- |
+| 盈利能力 | roe 净资产收益率 / gross_margin 毛利率 / net_margin_parent 归母净利率            | 越高越好                     |
+| 成长性   | revenue_growth 营收增长率 / profit_growth 归母净利润增长率                       | 越高越好                     |
 | 财务风险 | asset_liability_ratio 资产负债率 / current_ratio 流动比率 / quick_ratio 速动比率 | 负债率越低越好, 比率越高越好 |
-| 盈利质量 | cashflow_quality 经营现金流/净利润 | 越高越好 |
-| 每股指标 | eps 基本每股收益 | 越高越好 |
-| 估值 | pe 市盈率 / pb 市净率 | 越低越便宜 |
+| 盈利质量 | cashflow_quality 经营现金流/净利润                                               | 越高越好                     |
+| 每股指标 | eps 基本每股收益                                                                 | 越高越好                     |
+| 估值     | pe 市盈率 / pb 市净率                                                            | 越低越便宜                   |
 
 ### 对标口径
+
 - 行业样本: 同行业(行业ID)listed_company同一年度年报
 - 统计量: 均值、中位数、P25、P75(线性插值)、总体标准差
 - 百分位: `(严格小于该值的样本数)/(样本数-1)×100`; 方向调整后得到评分 score(0-100, 越高越优)
@@ -109,26 +119,28 @@ ai.model=deepseek-chat
 ## 三、接口设计表 (详见 `docs/接口设计表.md`)
 
 ### 财务模块 `/api/finance`
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| GET | `/api/finance/industries` | 行业列表(含公司数) |
-| GET | `/api/finance/companies` | 公司分页查询(keyword/industryId) |
-| GET | `/api/finance/companies/{id}` | 公司详情 |
-| GET | `/api/finance/profile` | 财务画像(原始数据+指标+估值) |
-| GET | `/api/finance/trend` | 多年度指标趋势 |
-| GET | `/api/finance/benchmark` | industry_benchmark(值/基准/百分位/排名) |
-| GET | `/api/finance/ranking` | 行业指标排名 |
-| POST | `/api/finance/screening` | 多条件交叉筛选(gt/lt/between/pct_gt/pct_lt) |
-| POST | `/api/finance/recalc` | 重算指标与industry_benchmark |
+
+| 方法 | 路径                            | 说明                                        |
+| ---- | ------------------------------- | ------------------------------------------- |
+| GET  | `/api/finance/industries`     | 行业列表(含公司数)                          |
+| GET  | `/api/finance/companies`      | 公司分页查询(keyword/industryId)            |
+| GET  | `/api/finance/companies/{id}` | 公司详情                                    |
+| GET  | `/api/finance/profile`        | 财务画像(原始数据+指标+估值)                |
+| GET  | `/api/finance/trend`          | 多年度指标趋势                              |
+| GET  | `/api/finance/benchmark`      | industry_benchmark(值/基准/百分位/排名)     |
+| GET  | `/api/finance/ranking`        | 行业指标排名                                |
+| POST | `/api/finance/screening`      | 多条件交叉筛选(gt/lt/between/pct_gt/pct_lt) |
+| POST | `/api/finance/recalc`         | 重算指标与industry_benchmark                |
 
 ### AI 模块 `/api/ai`
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| GET | `/api/ai/templates` | 三层 Prompt 模板列表 |
-| POST | `/api/ai/report` | 生成财报解读简报 |
-| POST | `/api/ai/chat` | 上下文感知的追问对话 |
-| GET | `/api/ai/reports` | 报告/对话记录(分页) |
-| GET | `/api/ai/reports/{id}` | 报告详情 |
+
+| 方法 | 路径                     | 说明                 |
+| ---- | ------------------------ | -------------------- |
+| GET  | `/api/ai/templates`    | 三层 Prompt 模板列表 |
+| POST | `/api/ai/report`       | 生成财报解读简报     |
+| POST | `/api/ai/chat`         | 上下文感知的追问对话 |
+| GET  | `/api/ai/reports`      | 报告/对话记录(分页)  |
+| GET  | `/api/ai/reports/{id}` | 报告详情             |
 
 统一响应: `{"code":"0","message":"success","data":...}`, 业务错误码见 `ErrorCodeEnums`。
 

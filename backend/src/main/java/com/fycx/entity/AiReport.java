@@ -1,5 +1,6 @@
 package com.fycx.entity;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -21,6 +22,10 @@ public class AiReport {
     private String aiAnswer;
 
     private String context;         // 注入Prompt的数据上下文JSON(审计防幻觉用)
+
+    private BigDecimal numericAccuracy;   // 数值引用准确率(%)
+
+    private Integer suspiciousCount;      // 可疑(疑似幻觉)数字数量
 
     private Date createTime;
 
@@ -94,5 +99,21 @@ public class AiReport {
 
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
+    }
+
+    public BigDecimal getNumericAccuracy() {
+        return numericAccuracy;
+    }
+
+    public void setNumericAccuracy(BigDecimal numericAccuracy) {
+        this.numericAccuracy = numericAccuracy;
+    }
+
+    public Integer getSuspiciousCount() {
+        return suspiciousCount;
+    }
+
+    public void setSuspiciousCount(Integer suspiciousCount) {
+        this.suspiciousCount = suspiciousCount;
     }
 }

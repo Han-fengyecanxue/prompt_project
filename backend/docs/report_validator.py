@@ -1,10 +1,11 @@
+
 # -*- coding: utf-8 -*-
 """
 AI解读报告"数值幻觉"自动校验器 (原型)
 ====================================
-原理: 报告的每个数字都应能在"注入上下文(计算层JSON)"中找到来源。
-  提取报告(AI回答)中出现的所有数字 -> 与注入JSON中的锚点数值比对
-  -> 输出: 引用数值数 / 可溯源数 / 可疑数(疑似幻觉) / 数值引用准确率
+原理: 仅将明确关联到财务指标名称的报告数字与该指标的注入字段比较。
+    公司代码、财年等未关联指标的数字单独计数, 不计入可核验引用。
+    本脚本是规则筛查器, 不能判断指标表述是否正确或数字是否在语义上被误用。
 
 用法:
   py -3 docs/report_validator.py --report-id 1        # 校验库中报告ID=1
@@ -12,134 +13,181 @@ AI解读报告"数值幻觉"自动校验器 (原型)
   py -3 docs/report_validator.py --context c.json --answer a.md   # 校验本地文件
 
 说明:
-  - 锚点数值: 注入JSON中的所有数值(公司值/均值/中位数/P25/P75/百分位/评分/排名/样本数/代码/财年等)
-  - 容忍: 四舍五入到小数点后3位一致即视为可溯源(解决 91.9649 vs 91.96 之类显示截断)
-  - 日期型数字(如 2023-12-31)不参与比对; "3/8" 类排名字符串按 3、8 两个锚点处理
+    - 可核验字段: 公司值、行业均值/中位数、P25/P75、百分位、评分和排名
+    - 容忍: 四舍五入到小数点后2位一致
+    - 数据库模式使用当前 ai_report 英文字段; 缺少本地配置时读取 .example 文件
 """
+
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
-import urllib.parse
+from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-PROPS = r"C:\Users\Hanyu\prompt_project\prompt_project\src\main\resources\config\application-development.properties"
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+DEFAULT_PROPS = BACKEND_DIR / "src/main/resources/config/application-development.properties"
+EXAMPLE_PROPS = BACKEND_DIR / "src/main/resources/config/application-development.properties.example"
+
+INDICATOR_ALIASES = {
+    "roe": ("ROE", "净资产收益率"),
+    "gross_margin": ("gross_margin", "毛利率"),
+    "net_margin_parent": ("归母净利率", "净利率"),
+    "revenue_growth": ("营业收入增长率", "营收增长率"),
+    "profit_growth": ("归母净利润增长率", "净利润增长率"),
+    "asset_liability_ratio": ("资产负债率",),
+    "current_ratio": ("流动比率",),
+    "quick_ratio": ("速动比率",),
+    "cashflow_quality": ("cashflow_quality", "经营现金流/净利润", "现金流质量"),
+    "eps": ("EPS", "每股收益"),
+    "pe": ("市盈率",),
+    "pb": ("市净率",),
+}
 
 
-def db_config():
-    """从 application-development.properties 读取 MySQL 连接信息"""
+def read_properties(path):
     cfg = {}
-    with open(PROPS, encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if "=" not in line or line.startswith("#"):
                 continue
             k, v = line.split("=", 1)
             cfg[k.strip()] = v.strip()
+
     url = cfg.get("spring.datasource.druid.url", "")
-    m = re.search(r"jdbc:mysql://[^/]+/([^?]+)", url)
-    db = urllib.parse.unquote(m.group(1)) if m else "财报分析系统"
-    return {"db": db, "user": cfg.get("spring.datasource.druid.username", "root"),
-            "pwd": cfg.get("spring.datasource.druid.password", "")}
+    match = re.search(r"jdbc:mysql://([^:/?]+)(?::(\d+))?/([^?]+)", url)
+    if not match:
+        raise ValueError("配置文件中缺少有效的 spring.datasource.druid.url")
+    return {
+        "host": match.group(1),
+        "port": match.group(2) or "3306",
+        "database": match.group(3),
+        "user": cfg.get("spring.datasource.druid.username", "root"),
+        "password": cfg.get("spring.datasource.druid.password", ""),
+    }
 
 
-def fetch_reports(rid=None):
-    cfg = db_config()
-    # 字段含换行/制表符会破坏行解析: 输出前把 \ -> \\, \r\n -> 字面 \n
-    esc = "REPLACE(REPLACE(REPLACE(%s,'\\\\','\\\\\\\\'),'\\r',''),'\\n','\\\\n')"
-    sql = ("SELECT 报告ID, 公司ID, 财年, 报告类型, %s AS AI回答, %s AS 上下文 "
-           "FROM `%s`.`解读报告`" % (esc % "AI回答", esc % "上下文", cfg["db"]))
+def fetch_reports(rid=None, props_path=None, mysql_path="mysql"):
+    """从当前英文表结构读取报告; 密码通过环境变量传给 mysql, 不放入命令行。"""
+    props_path = Path(props_path or DEFAULT_PROPS)
+    if not props_path.exists():
+        props_path = EXAMPLE_PROPS
+    cfg = read_properties(props_path)
+    sql = ("SELECT JSON_ARRAY(report_id, company_id, fiscal_year, report_type, ai_answer, context_json) "
+           "FROM `{}`.`ai_report`".format(cfg["database"]))
     if rid:
-        sql += " WHERE 报告ID=%d" % rid
+        sql += " WHERE report_id=%d" % int(rid)
     sql += ";"
-    # 注意: mysql.exe 命令行参数不支持中文(argv走ANSI), 中文SQL只能走stdin字节流
+    env = os.environ.copy()
+    env["MYSQL_PWD"] = cfg["password"]
     p = subprocess.run(
-        ["mysql", "-u" + cfg["user"], "-p" + cfg["pwd"], "--default-character-set=utf8mb4",
-         "--batch", "--raw"],
-        input=sql.encode("utf-8"), capture_output=True)
+        [mysql_path, "--host=" + cfg["host"], "--port=" + cfg["port"],
+         "--user=" + cfg["user"], "--default-character-set=utf8mb4", "--batch", "--skip-column-names"],
+        input=sql.encode("utf-8"), capture_output=True, env=env)
     if p.returncode != 0:
         print("DB错误:", p.stderr.decode("utf-8", "replace"))
         return []
-    lines = p.stdout.decode("utf-8", "replace").splitlines()
-    if not lines:
-        return []
-    head = lines[0].split("\t")
     rows = []
-    for ln in lines[1:]:
-        if not ln.strip():
+    for line in p.stdout.decode("utf-8", "replace").splitlines():
+        if not line.strip():
             continue
-        parts = ln.split("\t")
-        if len(parts) < 6:
-            continue
-        row = dict(zip(head, parts))
-        # 还原转义
-        for k in ("AI回答", "上下文"):
-            row[k] = row[k].replace("\\\\", "\\").replace("\\n", "\n").replace("\\r", "\r")
-        rows.append(row)
+        values = json.loads(line)
+        rows.append({
+            "report_id": values[0], "company_id": values[1], "fiscal_year": values[2],
+            "report_type": values[3], "answer": values[4] or "", "context": values[5] or "",
+        })
     return rows
 
 
-def extract_anchors(context_json):
-    """从注入JSON提取全部锚点数值"""
-    anchors = set()
+def extract_numbers(text):
+    """从一段指标说明中提取带正负号的小数或整数。"""
+    return [float(match.group()) for match in re.finditer(
+        r"(?<![A-Za-z0-9_.])-?\d+(?:\.\d+)?", text
+    )]
 
-    def walk(o):
-        if isinstance(o, dict):
-            for k, v in o.items():
-                if isinstance(v, (dict, list)):
-                    walk(v)
-                elif isinstance(v, bool):
-                    continue
-                elif isinstance(v, (int, float)):
-                    anchors.add(round(float(v), 3))
-                elif isinstance(v, str):
-                    # 排名字符串 "3/8" -> 3, 8; 股票代码等数字串也加入
-                    s = v.strip()
-                    if re.fullmatch(r"\d+/\d+", s):
-                        a, b = s.split("/")
-                        anchors.add(round(float(a), 3))
-                        anchors.add(round(float(b), 3))
-                    elif re.fullmatch(r"\d{4,6}", s):
-                        anchors.add(round(float(s), 3))
-        elif isinstance(o, list):
-            for v in o:
-                walk(v)
 
-    try:
-        walk(json.loads(context_json))
-    except Exception:
-        pass
+def indicator_aliases(code, item):
+    aliases = [code, item.get("指标名称", "")]
+    aliases.extend(INDICATOR_ALIASES.get(code, ()))
+    return [alias for alias in aliases if alias]
+
+
+def line_indicators(line, items):
+    def appears(alias):
+        if not alias.isascii():
+            return alias in line
+        pattern = r"(?<![A-Za-z0-9_])" + re.escape(alias) + r"(?![A-Za-z0-9_])"
+        return re.search(pattern, line, flags=re.IGNORECASE) is not None
+
+    return [item for item in items if any(
+        appears(alias) for alias in indicator_aliases(item.get("指标编码", ""), item)
+    )]
+
+
+def item_anchors(item):
+    anchors = []
+    for key in ("公司值", "行业均值", "行业中位数", "P25", "P75", "行业百分位",
+                "行业评分(0-100越高越优)"):
+        value = item.get(key)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            anchors.append(float(value))
+    ranking = item.get("行业排名")
+    if isinstance(ranking, str) and re.fullmatch(r"\d+/\d+", ranking.strip()):
+        anchors.extend(float(part) for part in ranking.split("/"))
     return anchors
 
 
-def extract_numbers(text):
-    """从文本提取数字(保留小数), 忽略日期序列中的数字"""
-    text = re.sub(r"\d{4}-\d{2}-\d{2}", " ", text)   # 日期
-    out = []
-    for m in re.finditer(r"\d+(?:\.\d+)?", text):
-        out.append(float(m.group()))
-    return out
+def evaluate_answer(answer, context_json):
+    """只验证明确关联到指标名称的数字，且只与该指标自身字段比较。"""
+    try:
+        context = json.loads(context_json)
+        items = context.get("indicators", []) if isinstance(context, dict) else []
+        if not isinstance(items, list):
+            items = []
+    except (TypeError, json.JSONDecodeError):
+        items = []
+
+    claims = []
+    unverified = []
+    unattributed = 0
+    for line in answer.splitlines():
+        metric_items = line_indicators(line, items)
+        numbers = extract_numbers(line)
+        if not numbers:
+            continue
+        if not metric_items:
+            unattributed += len(numbers)
+            continue
+        anchors = [value for item in metric_items for value in item_anchors(item)]
+        for number in numbers:
+            claims.append(number)
+            if not any(round(number, 2) == round(anchor, 2) for anchor in anchors):
+                unverified.append(number)
+
+    verified = len(claims) - len(unverified)
+    return {
+        "claims": len(claims),
+        "verified": verified,
+        "unverified": unverified,
+        "unattributed": unattributed,
+        "acc": verified / len(claims) * 100 if claims else 0.0,
+    }
 
 
 def validate(answer, context_json, label=""):
-    anchors = extract_anchors(context_json)
-    nums = extract_numbers(answer)
-    matched, suspicious = [], []
-    for n in nums:
-        if any(abs(n - a) <= 0.001 for a in anchors):
-            matched.append(n)
-        else:
-            suspicious.append(n)
-    acc = len(matched) / len(nums) * 100 if nums else 100.0
+    result = evaluate_answer(answer, context_json)
     print("=" * 66)
     print("报告: %s" % label)
-    print("回答中数字总数: %d | 可溯源: %d | 可疑(疑似幻觉): %d | 数值引用准确率: %.1f%%"
-          % (len(nums), len(matched), len(suspicious), acc))
-    if suspicious:
-        print("可疑数字: %s" % ", ".join(repr(x) for x in suspicious[:20]))
-    return {"nums": len(nums), "matched": len(matched), "suspicious": suspicious, "acc": acc}
+    print("指标关联数字: %d | 同指标可核验: %d | 未匹配: %d | 无指标归属数字: %d | 引用匹配率: %.1f%%"
+          % (result["claims"], result["verified"], len(result["unverified"]),
+             result["unattributed"], result["acc"]))
+    if result["unverified"]:
+        print("未匹配数字: %s" % ", ".join(repr(x) for x in result["unverified"][:20]))
+    return result
 
 
 def main():
@@ -151,8 +199,8 @@ def main():
     args = ap.parse_args()
 
     if args.context and args.answer:
-        ctx = open(args.context, encoding="utf-8").read()
-        ans = open(args.answer, encoding="utf-8").read()
+        ctx = Path(args.context).read_text(encoding="utf-8")
+        ans = Path(args.answer).read_text(encoding="utf-8")
         validate(ans, ctx, "%s <-> %s" % (args.answer, args.context))
         return
 
@@ -162,10 +210,11 @@ def main():
         return
     total = {"nums": 0, "matched": 0}
     for r in rows:
-        label = "ID=%s 公司%s %s年 %s" % (r.get("报告ID"), r.get("公司ID"), r.get("财年"), r.get("报告类型"))
-        res = validate(r.get("AI回答", ""), r.get("上下文", ""), label)
-        total["nums"] += res["nums"]
-        total["matched"] += res["matched"]
+        label = "ID=%s 公司%s %s年 %s" % (r.get("report_id"), r.get("company_id"),
+                           r.get("fiscal_year"), r.get("report_type"))
+        res = validate(r.get("answer", ""), r.get("context", ""), label)
+        total["nums"] += res["claims"]
+        total["matched"] += res["verified"]
     if len(rows) > 1:
         print("=" * 66)
         print("合计: 数字 %d | 可溯源 %d | 总体准确率 %.1f%%"
