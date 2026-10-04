@@ -14,7 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 数值幻觉校验器 (移植自 docs/report_validator.py)
+ * 数值幻觉校验器 (移植自 tools/report_validator.py)
  * 原理: 报告中的每个数字都应能在"注入上下文(计算层JSON)"中找到锚点来源。
  *   可溯源: 报告数字 四舍五入到3位 后能在注入JSON锚点集合中命中(等价 abs<=0.0005)。
  *   可疑(疑似幻觉): 未能命中锚点的数字。

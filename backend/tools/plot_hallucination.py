@@ -2,13 +2,13 @@
 """
 论文图表生成器: Prompt配置对"数值幻觉"影响的对比图
 =================================================
-数据: docs/eval_data.csv (可编辑后重跑)
-输出: docs/figures/ 下 3 张 300dpi PNG:
+数据: ../docs/eval_data.csv (可编辑后重跑)
+输出: ../docs/figures/ 下 3 张 300dpi PNG:
   fig1_accuracy.png       数值引用准确率对比(柱状, 标注实测/示意)
   fig2_hallucinations.png 疑似幻觉数字数对比(柱状, 越低越好)
   fig3_compliance.png     结构合规率 与 评级一致率 分组柱状
 
-用法: py -3 docs/plot_hallucination.py
+用法: py -3 tools/plot_hallucination.py
 依赖: pip install matplotlib (中文字体用 Windows 黑体 SimHei)
 """
 import csv
@@ -23,8 +23,8 @@ from matplotlib import font_manager
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CSV = os.path.join(HERE, "eval_data.csv")
-OUT = os.path.join(HERE, "figures")
+CSV = os.path.join(HERE, "..", "docs", "eval_data.csv")
+OUT = os.path.join(HERE, "..", "docs", "figures")
 os.makedirs(OUT, exist_ok=True)
 
 # 中文字体: 优先 SimHei(黑体), 找不到则扫描系统中文字体
@@ -101,7 +101,7 @@ def fig_halls(rows):
     ax.set_title("不同Prompt配置下疑似幻觉数字数对比(越低越好)")
     plt.setp(ax.get_xticklabels(), rotation=18, ha="right")
     fig.text(0.5, 0.01,
-             "注: 幻觉数字=报告中出现但无法在注入数据中检索到的数字, 由 docs/report_validator.py 自动判定",
+             "注: 幻觉数字=报告中出现但无法在注入数据中检索到的数字, 由 tools/report_validator.py 自动判定",
              ha="center", fontsize=7.5, color="#555555")
     fig.tight_layout(rect=[0, 0.04, 1, 1])
     p = os.path.join(OUT, "fig2_hallucinations.png")

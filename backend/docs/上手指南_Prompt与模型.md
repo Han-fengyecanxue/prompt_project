@@ -279,5 +279,5 @@ curl http://localhost:11434/v1/chat/completions -d '{"model":"qwen2.5:7b","messa
 - 三层 Prompt 模板数据:`sql/01_schema.sql` 中 `prompt_template` 表的 3 行插入语句
 - Prompt 拼接逻辑:`src/main/java/com/fycx/service/impl/AiServiceImpl.java`
 - AI 供应商配置:`src/main/resources/config/application-development.properties`(mock/openai 切换)
-- 幻觉自动校验:`docs/report_validator.py`;实验图表:`docs/plot_hallucination.py`、`docs/eval_data.csv`
-- 本指南转 Word:在 docs 目录执行 `py md2docx.py 上手指南_Prompt与模型.md`
+- 幻觉自动校验:`tools/report_validator.py`;实验图表:`tools/plot_hallucination.py`、`docs/eval_data.csv`
+- 本指南转 Word:在 backend 目录执行 `py tools/md2docx.py docs/上手指南_Prompt与模型.md`

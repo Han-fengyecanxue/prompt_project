@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(BACKEND_DIR / "docs"))
+sys.path.insert(0, str(BACKEND_DIR / "tools"))
 sys.path.insert(0, str(BACKEND_DIR / "sql"))
 
 import fetch_real_data

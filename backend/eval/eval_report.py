@@ -11,7 +11,7 @@ Prompt 工程抗数值幻觉评测脚本 (论文核心实验)
   c_rp       : strict + 先复述后分析 (先列引用数值再展开分析)
   c_v        : strict + 生成后校验器 (校验未溯源数字并触发一次修正重试)
 
-校验: 复用 docs/report_validator.py 的 evaluate_answer(), 以注入数据的
+校验: 复用 tools/report_validator.py 的 evaluate_answer(), 以注入数据的
   指标值(公司值/行业均值/中位数/P25/P75/百分位/评分)为锚点, 统计报告数字
   中能溯源到对应指标锚点的比例 —— 即"数值引用准确率"。
 
@@ -36,7 +36,7 @@ from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
-sys.path.append(str(BACKEND_DIR / "docs"))
+sys.path.append(str(BACKEND_DIR / "tools"))
 import report_validator  # noqa: E402  -> 复用 evaluate_answer
 
 BASE_URL = "http://localhost:8091"

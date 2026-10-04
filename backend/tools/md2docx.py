@@ -2,11 +2,13 @@
 """
 Markdown -> Word(.docx) 转换器
 支持: 标题/表格/代码块/无序有序列表/加粗/行内代码, 中文字体(宋体/黑体)排版
-用法: py -3 md2docx.py <输入.md> [输出.docx]
+用法: py -3 tools/md2docx.py <输入.md> [输出.docx]
 """
 import sys
 import re
 from docx import Document
+
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT

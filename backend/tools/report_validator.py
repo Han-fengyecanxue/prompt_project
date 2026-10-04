@@ -8,9 +8,9 @@ AI解读报告"数值幻觉"自动校验器 (原型)
     本脚本是规则筛查器, 不能判断指标表述是否正确或数字是否在语义上被误用。
 
 用法:
-  py -3 docs/report_validator.py --report-id 1        # 校验库中报告ID=1
-  py -3 docs/report_validator.py --all                # 校验全部报告
-  py -3 docs/report_validator.py --context c.json --answer a.md   # 校验本地文件
+  py -3 tools/report_validator.py --report-id 1        # 校验库中报告ID=1
+  py -3 tools/report_validator.py --all                # 校验全部报告
+  py -3 tools/report_validator.py --context c.json --answer a.md   # 校验本地文件
 
 说明:
     - 可核验字段: 公司值、行业均值/中位数、P25/P75、百分位、评分和排名

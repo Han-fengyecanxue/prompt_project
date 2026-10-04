@@ -163,7 +163,10 @@ src/main/resources
 ├── mapper/*.xml  9 个 Mapper XML
 └── config/application-development.properties
 sql/              建表脚本 + 真实数据采集/导入脚本
-docs/             接口设计表
+tools/            Python 工具(报告数值校验/图表生成/md2docx 转换)
+docs/             项目文档(接口设计表/技术文档/上手指南)与图表
+eval/             论文评测脚本与结果
+tests/            Python 质量测试
 ```
 
 ## 五、验证数据 (3 行业 24 家listed_company, 2021-2025)
