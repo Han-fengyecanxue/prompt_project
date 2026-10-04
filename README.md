@@ -9,8 +9,10 @@
 prompt_project/
 ├── backend/                  # 后端: Spring Boot 3.4 + MyBatis + MySQL(仓库 prompt_project.git)
 │   ├── sql/                  #   建库脚本 01_schema.sql / 真实数据 03_real_data.sql / init_db.bat / 采集脚本
-│   ├── docs/                 #   技术文档.md · 接口设计表.md · 上手指南_Prompt与模型.md · 幻觉校验工具
 │   ├── src/                  #   Java 源码(controller/service/mapper/entity)
+│   ├── docs/                 #   文档(.md 为源 · .docx 由 md2docx.py 生成) + 幻觉校验工具 + 图表
+│   ├── eval/                 #   论文评测脚本(analyze.py / eval_report.py)与结果
+│   ├── tests/                #   Python 质量测试
 │   └── README.md             #   后端详细说明(克隆、初始化、启动、API)
 ├── frontend/                 # 前端: Vue3 + Vite + ECharts(独立仓库 front.git, 原 Desktop\vuetest)
 │   └── src/components/       #   公司查询/财务画像(图表)/AI解读/行业排行/智能筛选
@@ -40,6 +42,8 @@ prompt_project/
 | **Prompt 与模型上手指南** | `backend/docs/上手指南_Prompt与模型.md` | Prompt 工程 / 云端 API(DeepSeek 等) / 本地模型(Ollama) / 文生图提示词 |
 | 深化研究方案 | `backend/docs/Prompt工程深化研究与系统扩展方案.md` | 幻觉校验、实验设计与扩展点 |
 | 后端 README | `backend/README.md` | 协作者克隆/构建/启动指南 |
+
+> 📄 文档约定: `*.md` 为**唯一源文件**; `*.docx` 由 `backend/docs/md2docx.py` 从同名 `.md` 生成, 属**派生产物**, 请勿直接编辑。文档索引见 `backend/docs/README.md`。
 
 ## 🔑 关键配置速查
 
