@@ -2,18 +2,21 @@
 """
 Prompt 工程抗数值幻觉评测脚本 (论文核心实验)
 ==========================================
-对比三种 prompt 策略在"财报数据引用准确率"上的差异:
+对比多种 prompt 策略在"财报数据引用准确率"上的差异:
 
   baseline   : 直接让模型凭印象写财报解读 (无数据注入、无约束)   —— 测幻觉基线
   injected   : 将真实指标数据以 JSON 注入 Prompt (无负面约束)
   strict     : 注入 + 负面指令 / 输出约束 (对应生产 AI 系统方案)
+  c_fs       : strict + 少样本范例 (占位符式, 示范引用注入数值的写法)
+  c_rp       : strict + 先复述后分析 (先列引用数值再展开分析)
+  c_v        : strict + 生成后校验器 (校验未溯源数字并触发一次修正重试)
 
 校验: 复用 docs/report_validator.py 的 evaluate_answer(), 以注入数据的
   指标值(公司值/行业均值/中位数/P25/P75/百分位/评分)为锚点, 统计报告数字
   中能溯源到对应指标锚点的比例 —— 即"数值引用准确率"。
 
 用法:
-  py -3 eval/eval_report.py --max-samples 6 --year 2024 --strategies baseline,injected,strict
+  py -3 eval/eval_report.py --max-samples 6 --year 2024 --strategies baseline,injected,strict,c_fs,c_rp,c_v
   py -3 eval/eval_report.py --companies 1,6,9 --year 2023 --strategies baseline,strict
   py -3 eval/eval_report.py --all --year 2024 --dry-run     # 预览评测集不调LLM
 
@@ -40,7 +43,7 @@ BASE_URL = "http://localhost:8091"
 DEFAULT_PROPS = BACKEND_DIR / "src/main/resources/config/application-development.properties"
 EXAMPLE_PROPS = BACKEND_DIR / "src/main/resources/config/application-development.properties.example"
 
-STRATEGIES = ["baseline", "injected", "strict"]
+STRATEGIES = ["baseline", "injected", "strict", "c_fs", "c_rp", "c_v"]
 
 
 # ==================== 配置读取 ====================
@@ -133,6 +136,30 @@ OUTPUT_CONSTRAINT = (
     "5. 使用中文、Markdown 格式, 控制在 800 字以内。"
 )
 
+# C+FS: 少样本范例(占位符式, 示范"引用注入数值"的写法, 不引入锚点外固定数字)
+FEW_SHOT_EXAMPLE = (
+    "\n\n以下是一份符合要求、所有数值均源自【数据注入】的示例片段, 请参考其行文风格与引用数值"
+    "的方式(其中 <指标> 表示需替换为本次【数据注入】中的真实数值):\n"
+    "一、盈利能力分析\n"
+    "公司 ROE 为 <ROE数值>%, 高于行业中位数 <行业中位数数值>%, 表明公司在资本回报能力上具备"
+    "优势; 毛利率为 <毛利率数值>%, 行业排名 <行业排名>, 盈利能力整体偏优。\n"
+    "二、成长性分析\n"
+    "营业收入同比增速为 <营收增速数值>%, 高于行业平均 <行业均值数值>%, 成长性表现突出。"
+)
+
+# C+RP: 先复述后分析
+RESTATE_INSTRUCTION = (
+    "\n\n在正式分析之前, 请先在报告开头分章节复述你将要引用的关键指标及其来源数值"
+    "(建议逐条以'指标名称-数值-来源章节'列明), 然后再严格基于这些已复述的数值展开分析, "
+    "确保每个数字都在【数据注入】中可溯源。"
+)
+
+# C+V: 生成后校验的修正指令(占位 {} 填入未溯源数字)
+FIX_INSTRUCTION = (
+    "系统检测到你上一版输出中有下列数字无法在【数据注入】中溯源(疑似数值幻觉): {}。"
+    "请严格重新依据【数据注入】中的数值重写整份报告, 严禁再出现任何注入数据之外的数字。"
+)
+
 
 def build_messages(strategy, name, code, year, context_json):
     instruction = f"请基于可得信息, 生成{name}({code}){year}年度财报解读简报。"
@@ -149,12 +176,18 @@ def build_messages(strategy, name, code, year, context_json):
             {"role": "system", "content": ROLE},
             {"role": "user", "content": inject},
         ]
-    # strict: 生产方案 = 角色 + 数据注入 + 输出约束
+    # strict/c_v: 生产方案 = 角色 + 数据注入 + 输出约束
     inject = ("以下是由系统精确计算出的该公司年度财务指标与行业对标数据(JSON 格式), "
               "这是本次分析唯一可信的数据来源:\n" + data_json)
+    user = OUTPUT_CONSTRAINT + "\n\n" + instruction
+    system = ROLE + "\n\n" + inject
+    if strategy == "c_fs":   # 注入 + 输出约束 + 少样本范例
+        user = FEW_SHOT_EXAMPLE + "\n\n" + user
+    elif strategy == "c_rp":  # 注入 + 输出约束 + 先复述后分析
+        user = OUTPUT_CONSTRAINT + RESTATE_INSTRUCTION + "\n\n" + instruction
     return [
-        {"role": "system", "content": ROLE + "\n\n" + inject},
-        {"role": "user", "content": OUTPUT_CONSTRAINT + "\n\n" + instruction},
+        {"role": "system", "content": system},
+        {"role": "user", "content": user},
     ]
 
 
@@ -175,6 +208,25 @@ def call_llm(msgs, cfg):
                                timeout=60) as resp:
         result = json.loads(resp.read().decode("utf-8"))
     return result["choices"][0]["message"]["content"]
+
+
+def generate_with_validation(msgs, cfg, context_str):
+    """C+V 生成后校验器: 生成 → 校验 → 若有未溯源数字则带修正指令重生成一次 → 返回修正版。
+    返回 (最终回答, 校验结果, 是否触发过重试)。"""
+    answer = call_llm(msgs, cfg)
+    res = report_validator.evaluate_answer(answer, context_str)
+    suspicious = res["unverified"] or []
+    if suspicious:
+        fix = FIX_INSTRUCTION.format(vals="、".join(str(u) for u in suspicious[:8]))
+        msgs2 = msgs[:] + [{"role": "user", "content": fix}]
+        try:
+            answer2 = call_llm(msgs2, cfg)
+            res2 = report_validator.evaluate_answer(answer2, context_str)
+            if res2["acc"] >= res["acc"] and len(res2["unverified"]) < len(suspicious):
+                return answer2, res2, True
+        except Exception:
+            pass
+    return answer, res, False
 
 
 # ==================== 评测主流程 ====================
@@ -264,8 +316,12 @@ def run():
                 msgs = build_messages(s, c.get("stockName"), c.get("stockCode"),
                                       args.year, context_json)
                 try:
-                    answer = call_llm(msgs, cfg)
-                    res = report_validator.evaluate_answer(answer, context_str)
+                    retried = False
+                    if s == "c_v":
+                        answer, res, retried = generate_with_validation(msgs, cfg, context_str)
+                    else:
+                        answer = call_llm(msgs, cfg)
+                        res = report_validator.evaluate_answer(answer, context_str)
                     verdict = {"acc": "%.1f" % res["acc"]}
                     per_strategy[s].append(res["acc"])
                     total["verified"] += res["verified"]
@@ -279,6 +335,7 @@ def run():
                         "company": c.get("stockName"), "code": c.get("stockCode"),
                         "year": args.year, "period": args.period, "strategy": s,
                         "context_json": context_json, "answer": answer,
+                        "retried": retried,
                         "acc": res["acc"], "acc_loose": acc_loose,
                         "claims": res["claims"], "verified": res["verified"],
                         "unverified": res["unverified"],
