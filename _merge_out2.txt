@@ -1,0 +1,17 @@
+﻿== MERGED n=12 ==
+τ¡ûτòÑ | n | strict | ┬▒SD | loose | ┬▒SD | halls
+baseline  | 12 |  13.33 ┬▒9.74 |  19.75 ┬▒13.46 | 18.42
+injected  | 12 |  89.69 ┬▒2.74 |  98.34 ┬▒2.06 | 11.67
+strict    | 12 |  98.72 ┬▒1.53 | 100.00 ┬▒0.00 | 1.08
+c_fs      | 12 |  97.52 ┬▒1.39 |  99.71 ┬▒0.91 | 2.27
+c_rp      | 12 |  95.15 ┬▒4.41 |  95.75 ┬▒4.21 | 4.83
+c_v       | 12 |  99.71 ┬▒0.72 | 100.00 ┬▒0.00 | 0.25
+
+== Wilcoxon (strict, n=12) ==
+baseline  -> injected  diff=-76.36 p=0.0005 sig=Y  (scipy=True)
+injected  -> strict    diff=-9.03 p=0.0005 sig=Y  (scipy=True)
+strict    -> c_fs      diff=+1.20 p=0.1294 sig=N  (scipy=True)
+c_fs      -> c_rp      diff=+2.37 p=0.3804 sig=N  (scipy=True)
+c_rp      -> c_v       diff=-4.56 p=0.0068 sig=Y  (scipy=True)
+baseline  -> strict    diff=-85.39 p=0.0005 sig=Y  (scipy=True)
+strict    -> c_v       diff=-0.99 p=0.0469 sig=Y  (scipy=True)

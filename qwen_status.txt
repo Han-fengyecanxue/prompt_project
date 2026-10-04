@@ -1,0 +1,1 @@
+now=18:43:18 python_running wall_min=0.8 CPU_s=26.8 | MD_not_yet

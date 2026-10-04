@@ -156,7 +156,7 @@ RESTATE_INSTRUCTION = (
 
 # C+V: 生成后校验的修正指令(占位 {} 填入未溯源数字)
 FIX_INSTRUCTION = (
-    "系统检测到你上一版输出中有下列数字无法在【数据注入】中溯源(疑似数值幻觉): {}。"
+    "系统检测到你上一版输出中有下列数字无法在【数据注入】中溯源(疑似数值幻觉): {vals}。"
     "请严格重新依据【数据注入】中的数值重写整份报告, 严禁再出现任何注入数据之外的数字。"
 )
 
@@ -191,7 +191,7 @@ def build_messages(strategy, name, code, year, context_json):
     ]
 
 
-# ==================== DeepSeek 调用 ====================
+# ==================== LLM 调用 (OpenAI 兼容: DeepSeek / Ollama 等) ====================
 
 def call_llm(msgs, cfg):
     url = cfg["base_url"].rstrip("/") + "/chat/completions"
@@ -201,11 +201,16 @@ def call_llm(msgs, cfg):
         "stream": False,
         "messages": msgs,
     }
+    # 本地 Ollama 思维型模型(qwen3.5/r1 等)默认输出思维链, 会渗进正文污染数字统计:
+    # 对本地端口关闭 think, 让 content 只保留正式回答; 云端 OpenAI 兼容接口不使用该字段。
+    if "11434" in (cfg.get("base_url") or "") or "localhost" in (cfg.get("base_url") or ""):
+        body["think"] = False
     req = urllib.request.Request(url, method="POST")
     req.add_header("Content-Type", "application/json")
-    req.add_header("Authorization", "Bearer " + cfg["api_key"])
+    if cfg.get("api_key"):
+        req.add_header("Authorization", "Bearer " + cfg["api_key"])
     with urllib.request.urlopen(req, data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
-                               timeout=60) as resp:
+                               timeout=cfg.get("timeout", 60)) as resp:
         result = json.loads(resp.read().decode("utf-8"))
     return result["choices"][0]["message"]["content"]
 
@@ -261,6 +266,10 @@ def run():
     ap.add_argument("--strategies", default=",".join(STRATEGIES),
                     help="逗号分隔的待测策略: " + ", ".join(STRATEGIES))
     ap.add_argument("--api-key", default=os.environ.get("DEEPSEEK_API_KEY"))
+    ap.add_argument("--base-url", default=None, help="覆盖 ai.base-url (如 http://localhost:11434/v1)")
+    ap.add_argument("--model", default=None, help="覆盖 ai.model (如 qwen3.5:2b)")
+    ap.add_argument("--temperature", type=float, default=None, help="覆盖 ai.temperature")
+    ap.add_argument("--timeout", type=int, default=None, help="单次调用超时秒数")
     ap.add_argument("--out", default="eval_result.md", help="结果 markdown 文件名(位于 eval/ 下)")
     ap.add_argument("--save-raw", action="store_true", help="保存每次 LLM 原始回答+验证明细为 JSON 作为论文证据")
     ap.add_argument("--dry-run", action="store_true", help="只拉数据并预览评测集, 不调用 LLM")
@@ -275,8 +284,17 @@ def run():
     cfg = read_ai_props(props_path)
     if args.api_key:
         cfg["api_key"] = args.api_key
-    if not cfg["base_url"] or not cfg["api_key"]:
-        print("错误: 缺少 ai.base-url 或 ai.api-key (检查 application-development.properties 或用 --api-key)。")
+    if args.base_url:
+        cfg["base_url"] = args.base_url
+    if args.model:
+        cfg["model"] = args.model
+    if args.temperature is not None:
+        cfg["temperature"] = args.temperature
+    if args.timeout:
+        cfg["timeout"] = args.timeout
+    local = any(h in cfg["base_url"] for h in ("localhost", "127.0.0.1"))
+    if not cfg["base_url"] or (not cfg["api_key"] and not local):
+        print("错误: 缺少 ai.base-url 或 ai.api-key (本地接口可省略 api-key)。")
         sys.exit(2)
 
     print(f"评测配置: base={cfg['base_url']} model={cfg['model']} year={args.year} "
@@ -364,6 +382,7 @@ def run():
         f.write("# Prompt 抗数值幻觉对照评测报告\n\n")
         f.write(f"- 评测年份: {args.year} | 报告期: {args.period}\n")
         f.write(f"- 模型: {cfg['model']} | temperature: {cfg['temperature']}\n")
+        f.write(f"- 接口: {cfg['base_url']}\n")
         f.write(f"- 评测样本数: {len(samples)} | 调 LLM 次数: {len(samples) * len(strat_list)}\n\n")
         f.write("## 逐样本结果\n\n")
         f.write("| 样本 | 公司 | 策略 | 引用准确率% | 备注 |\n|---|---|---|---|---|\n")
