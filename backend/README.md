@@ -5,7 +5,7 @@
 **架构**: Spring Boot 3.4 + MyBatis + MySQL 5.7 + Druid + Vue3 + ECharts
 **核心思想**: 双层解耦 —— 底层由系统精确计算财务指标与行业对标(可溯源、可验证), 上层通过"角色设定+数据注入+输出约束"三层 Prompt 驱动大模型生成自然语言解读报告(防幻觉)。
 
-> 📘 新手教程: `docs/上手指南_Prompt与模型.md`(Prompt 工程 / 云端 API / 本地模型 Ollama / 文生图 Prompt)
+> 📘 新手教程: `docs/上手指南_Prompt与模型.md`(Prompt 工程 / 云端 API / 本地模型 Ollama / 排错速查)
 
 ---
 
@@ -35,7 +35,7 @@ cd prompt_project
 
 - JDK 17+ (本项目已在 JDK 25 上验证)
 - Maven (项目自带 `mvnw`, 无需全局安装)
-- MySQL 5.7+ (本地 3306, 默认账号 root/13390797306, 可在配置中修改)
+- MySQL 5.7+ (本地 3306; 账号密码写在你自己的 `application-development.properties` 中, 不入库)
 
 ### 2. 初始化数据库
 
@@ -56,7 +56,7 @@ java -jar target\prompt_project-0.0.1-SNAPSHOT.jar
 # 服务端口 8091
 ```
 
-### 4. 计算指标与industry_benchmark
+### 4. 计算指标与行业基准
 
 ```bash
 curl -X POST http://localhost:8091/api/finance/recalc -H "Content-Type: application/json" -d "{}"
@@ -64,7 +64,7 @@ curl -X POST http://localhost:8091/api/finance/recalc -H "Content-Type: applicat
 
 首次导入数据后必须执行一次重算(或数据变更后重新执行), 系统会自动:
 
-1. 由原始数据计算 12 项标准化financial_indicator → 写入 `financial_indicator`
+1. 由原始报表科目计算 12 项标准化指标 → 写入 `financial_indicator`
 2. 按 行业×年度×指标 计算均值/中位数/标准差/P25/P75 → 写入 `industry_benchmark`
 
 ### 5. 配置大模型 (可选)
@@ -88,61 +88,28 @@ ai.model=deepseek-chat
 | ----------------------- | --------------------------- | -------------------------------------------------- |
 | `industry_category`   | 行业(证监会代码)            | 行业ID, 行业代码, 行业名称                         |
 | `listed_company`      | 公司基础信息                | 公司ID, 股票代码, 股票简称, 行业ID                 |
-| `report_item`         | 财报科目字典(22项)          | 项目编码(operating_revenue 等)                     |
-| `financial_raw_data`  | 公司×年度×科目的金额(元)  | 公司ID, 财年, 项目ID, 金额                         |
+| `report_item`         | 财报科目字典(23项)          | 科目编码(operating_revenue 等)                     |
+| `financial_raw_data`  | 公司×年度×科目的金额(元)  | 公司ID, 财年, 科目ID, 金额                         |
 | `financial_indicator` | 标准化指标(计算引擎产出)    | 公司ID, 财年, 指标编码, 指标值, 单位               |
 | `industry_benchmark`  | 行业统计基准                | 行业ID, 财年, 指标编码, 均值/中位数/标准差/P25/P75 |
 | `prompt_template`     | 三层Prompt模板              | 模板类型(角色设定/数据注入/输出约束)               |
 | `valuation_snapshot`  | 收盘价/总市值(计算PE/PB)    | 公司ID, 快照日期, 收盘价, 总市值                   |
 | `ai_report`           | AI简报/对话记录(防幻觉审计) | 公司ID, 报告类型, AI回答, 上下文JSON               |
 
-### 指标体系 (12 项, 详见 `IndicatorDef`)
-
-| 维度     | 指标                                                                             | 方向                         |
-| -------- | -------------------------------------------------------------------------------- | ---------------------------- |
-| 盈利能力 | roe 净资产收益率 / gross_margin 毛利率 / net_margin_parent 归母净利率            | 越高越好                     |
-| 成长性   | revenue_growth 营收增长率 / profit_growth 归母净利润增长率                       | 越高越好                     |
-| 财务风险 | asset_liability_ratio 资产负债率 / current_ratio 流动比率 / quick_ratio 速动比率 | 负债率越低越好, 比率越高越好 |
-| 盈利质量 | cashflow_quality 经营现金流/净利润                                               | 越高越好                     |
-| 每股指标 | eps 基本每股收益                                                                 | 越高越好                     |
-| 估值     | pe 市盈率 / pb 市净率                                                            | 越低越便宜                   |
-
-### 对标口径
-
-- 行业样本: 同行业(行业ID)listed_company同一年度年报
-- 统计量: 均值、中位数、P25、P75(线性插值)、总体标准差
-- 百分位: `(严格小于该值的样本数)/(样本数-1)×100`; 方向调整后得到评分 score(0-100, 越高越优)
-- 排名: higher_better 指标值最大为第 1 名; lower_better 指标值最小为第 1 名
+> **指标口径、指标体系(12 项)与行业对标算法**详见 [`docs/技术文档.md`](docs/技术文档.md)，
+> 此处不再重复维护，避免两处口径不一致。
 
 ---
 
-## 三、接口设计表 (详见 `docs/接口设计表.md`)
+## 三、接口
 
-### 财务模块 `/api/finance`
+完整入参/出参见 [`docs/接口设计表.md`](docs/接口设计表.md)（含前端调用的 `frontend/src/api.js` 对应关系）。
 
-| 方法 | 路径                            | 说明                                        |
-| ---- | ------------------------------- | ------------------------------------------- |
-| GET  | `/api/finance/industries`     | 行业列表(含公司数)                          |
-| GET  | `/api/finance/companies`      | 公司分页查询(keyword/industryId)            |
-| GET  | `/api/finance/companies/{id}` | 公司详情                                    |
-| GET  | `/api/finance/profile`        | 财务画像(原始数据+指标+估值)                |
-| GET  | `/api/finance/trend`          | 多年度指标趋势                              |
-| GET  | `/api/finance/benchmark`      | industry_benchmark(值/基准/百分位/排名)     |
-| GET  | `/api/finance/ranking`        | 行业指标排名                                |
-| POST | `/api/finance/screening`      | 多条件交叉筛选(gt/lt/between/pct_gt/pct_lt) |
-| POST | `/api/finance/recalc`         | 重算指标与industry_benchmark                |
+- 财务: `/api/finance/{industries,indicators,companies,profile,trend,benchmark,ranking,screening,recalc}`
+- AI: `/api/ai/{templates,report,chat,reports}`
+- 系统: `/api/health`
 
-### AI 模块 `/api/ai`
-
-| 方法 | 路径                     | 说明                 |
-| ---- | ------------------------ | -------------------- |
-| GET  | `/api/ai/templates`    | 三层 Prompt 模板列表 |
-| POST | `/api/ai/report`       | 生成财报解读简报     |
-| POST | `/api/ai/chat`         | 上下文感知的追问对话 |
-| GET  | `/api/ai/reports`      | 报告/对话记录(分页)  |
-| GET  | `/api/ai/reports/{id}` | 报告详情             |
-
-统一响应: `{"code":"0","message":"success","data":...}`, 业务错误码见 `ErrorCodeEnums`。
+统一响应 `{"code":"0","message":"success","data":...}`；`code != "0"` 为业务错误，错误码见 `ErrorCodeEnums`。
 
 ---
 
@@ -151,29 +118,30 @@ ai.model=deepseek-chat
 ```
 src/main/java/com/fycx
 ├── prompt_project/PromptProjectApplication.java  启动类
-├── common/       错误码/业务异常/全局异常/指标定义
+├── common/       错误码/业务异常/全局异常/指标定义/报告数值校验
 ├── config/       Druid数据源/CORS
-├── controller/   财务 + AI 接口, request/response DTO
+├── controller/   财务 + AI + 系统接口, request/response DTO
 ├── entity/       9 张表实体
 ├── mapper/       MyBatis Mapper 接口
 ├── service/
-│   ├── calc/     指标计算引擎 + industry_benchmark统计引擎
+│   ├── calc/     指标计算引擎 + 行业对标统计引擎
 │   └── impl/     FinanceServiceImpl / AiServiceImpl(三层Prompt+LLM客户端)
 src/main/resources
 ├── mapper/*.xml  9 个 Mapper XML
-└── config/application-development.properties
+└── config/application-development.properties(本地私有, 不入库; 参考 .example)
 sql/              建表脚本 + 真实数据采集/导入脚本
 tools/            Python 工具(报告数值校验/图表生成/md2docx 转换)
-docs/             项目文档(接口设计表/技术文档/上手指南)与图表
-eval/             论文评测脚本与结果
+docs/             项目文档(接口设计表/技术文档/上手指南)与论文图表
+eval/             论文对照实验: 评测脚本 + 逐条原始记录 + 统计脚本 + 分析结论
 tests/            Python 质量测试
 ```
 
-## 五、验证数据 (3 行业 24 家listed_company, 2021-2025)
+## 五、样本数据 (3 行业 24 家上市公司, 2021—2025)
 
 - C39 计算机通信电子: 中际旭创/新易盛/天孚通信/立讯精密/工业富联/沪电股份/深南电路/生益科技
 - C27 医药制造: 恒瑞医药/药明康德/迈瑞医疗/片仔癀/云南白药/复星医药/智飞生物/长春高新
 - C15 酒饮料精制茶: 贵州茅台/五粮液/泸州老窖/山西汾酒/洋河股份/古井贡酒/今世缘/青岛啤酒
 
-> 数据说明: 默认数据为**真实财报数据**——由 `sql/fetch_real_data.py` 从东方财富数据中心接口(三大报表)、新浪财经日K(年末收盘价)采集, 覆盖 3 行业 24 家listed_company 2021—2025 年报,
-> 与公开年报核对无误(如贵州茅台 2023 营收 1476.94 亿元)。
+> 数据说明: 默认数据为**真实财报数据**——由 `sql/fetch_real_data.py` 从东方财富数据中心接口(三大报表)、新浪财经日K(年末收盘价)采集,
+> 覆盖 3 行业 24 家上市公司 2021—2025 年报, 与公开年报核对无误(如贵州茅台 2023 营收 1476.94 亿元)。
+> 数据口径、已知局限与 PE/PB 股本核实情况见 [`docs/技术文档.md`](docs/技术文档.md)。

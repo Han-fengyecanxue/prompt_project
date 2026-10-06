@@ -168,7 +168,7 @@ CREATE TABLE `ai_report` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI解读报告/对话记录';
 
 -- ============================================================
--- 基础字典数据 (与真实财报数据配套, 3行业/24家上市公司/22个报表科目/3条Prompt模板)
+-- 基础字典数据 (与真实财报数据配套, 3行业/24家上市公司/23个报表科目/3条Prompt模板)
 -- 说明: 字典部分为真实定义(公司/行业/科目均为真实主体), 模拟的仅是财务数字;
 --       模拟财务数字已由 03_real_data.sql 中的真实数据取代。
 -- ============================================================
@@ -195,6 +195,7 @@ INSERT INTO `report_item` (`item_id`,`item_code`,`item_name`,`statement`,`unit`,
 INSERT INTO `report_item` (`item_id`,`item_code`,`item_name`,`statement`,`unit`,`display_order`) VALUES (15,'accounts_payable','应付账款','资产负债表','元',65);
 INSERT INTO `report_item` (`item_id`,`item_code`,`item_name`,`statement`,`unit`,`display_order`) VALUES (16,'total_liabilities','总负债','资产负债表','元',90);
 INSERT INTO `report_item` (`item_id`,`item_code`,`item_name`,`statement`,`unit`,`display_order`) VALUES (17,'total_equity','股东权益合计','资产负债表','元',95);
+INSERT INTO `report_item` (`item_id`,`item_code`,`item_name`,`statement`,`unit`,`display_order`) VALUES (23,'total_equity_parent','归属于母公司股东的权益','资产负债表','元',96);
 INSERT INTO `report_item` (`item_id`,`item_code`,`item_name`,`statement`,`unit`,`display_order`) VALUES (18,'operating_cashflow','经营活动现金流量净额','现金流量表','元',10);
 INSERT INTO `report_item` (`item_id`,`item_code`,`item_name`,`statement`,`unit`,`display_order`) VALUES (19,'investing_cashflow','投资活动现金流量净额','现金流量表','元',20);
 INSERT INTO `report_item` (`item_id`,`item_code`,`item_name`,`statement`,`unit`,`display_order`) VALUES (20,'financing_cashflow','筹资活动现金流量净额','现金流量表','元',30);

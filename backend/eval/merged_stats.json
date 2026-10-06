@@ -1,0 +1,102 @@
+{
+  "pairing": "matched",
+  "has_scipy": true,
+  "descriptive": {
+    "baseline": {
+      "n": 12,
+      "strict_mean": 11.162764771460424,
+      "strict_sd": 5.911628852012352,
+      "loose_mean": 32.1771978021978,
+      "loose_sd": 25.22467201025911,
+      "halls_mean": 18.833333333333332
+    },
+    "injected": {
+      "n": 12,
+      "strict_mean": 91.4141194530769,
+      "strict_sd": 3.192660084867014,
+      "loose_mean": 98.87605209481097,
+      "loose_sd": 1.0368305565037585,
+      "halls_mean": 10.083333333333334
+    },
+    "strict": {
+      "n": 12,
+      "strict_mean": 97.49599836596634,
+      "strict_sd": 1.982718301918239,
+      "loose_mean": 99.25106568570965,
+      "loose_sd": 0.9609137314817264,
+      "halls_mean": 2.5
+    },
+    "c_fs": {
+      "n": 12,
+      "strict_mean": 97.8360799569435,
+      "strict_sd": 1.2630085367761488,
+      "loose_mean": 99.8931623931624,
+      "loose_sd": 0.3700963264036029,
+      "halls_mean": 1.9166666666666667
+    },
+    "c_rp": {
+      "n": 12,
+      "strict_mean": 95.37762326135062,
+      "strict_sd": 5.065688380511201,
+      "loose_mean": 96.3545976106144,
+      "loose_sd": 4.566398349648966,
+      "halls_mean": 4.416666666666667
+    },
+    "c_v": {
+      "n": 12,
+      "strict_mean": 99.7991967871486,
+      "strict_sd": 0.695602733963405,
+      "loose_mean": 100.0,
+      "loose_sd": 0.0,
+      "halls_mean": 0.16666666666666666
+    }
+  },
+  "tests": {
+    "baseline->injected": {
+      "n_pairs": 12,
+      "diff_pp": 80.25135468161648,
+      "p": 0.00048828125,
+      "significant": true
+    },
+    "injected->strict": {
+      "n_pairs": 12,
+      "diff_pp": 6.081878912889447,
+      "p": 0.0009765625,
+      "significant": true
+    },
+    "strict->c_fs": {
+      "n_pairs": 12,
+      "diff_pp": 0.3400815909771519,
+      "p": 0.6376953125,
+      "significant": false
+    },
+    "c_fs->c_rp": {
+      "n_pairs": 12,
+      "diff_pp": -2.4584566955928593,
+      "p": 0.3203125,
+      "significant": false
+    },
+    "c_rp->c_v": {
+      "n_pairs": 12,
+      "diff_pp": 4.421573525797959,
+      "p": 0.015625,
+      "significant": true
+    },
+    "baseline->strict": {
+      "n_pairs": 12,
+      "diff_pp": 86.33323359450593,
+      "p": 0.00048828125,
+      "significant": true
+    },
+    "strict->c_v": {
+      "n_pairs": 12,
+      "diff_pp": 2.303198421182252,
+      "p": 0.0078125,
+      "significant": true
+    }
+  },
+  "sources": [
+    "eval_result_2024.raw.json",
+    "eval_result_2023.raw.json"
+  ]
+}

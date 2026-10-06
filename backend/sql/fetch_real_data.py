@@ -2,7 +2,7 @@
 """
 真实财报数据采集脚本 (东方财富公开数据接口 + 新浪/腾讯行情备用)
 ================================================================
-功能: 拉取三大报表(利润表/资产负债表/现金流量表) 22 个科目 + 年末估值(close_price/market_cap),
+功能: 拉取三大报表(利润表/资产负债表/现金流量表) 23 个科目 + 年末估值(close_price/market_cap),
       生成 SQL 导入文件或直写 MySQL, 导入真实财报数据。
 
 用法:
@@ -70,6 +70,7 @@ ITEM_ID = {
     "short_term_borrowings": 14, "accounts_payable": 15, "total_liabilities": 16,
     "total_equity": 17, "operating_cashflow": 18, "investing_cashflow": 19,
     "financing_cashflow": 20, "current_assets_total": 21, "current_liabilities_total": 22,
+    "total_equity_parent": 23,
 }
 
 # 东财接口字段 -> 本系统科目编码。
@@ -93,7 +94,11 @@ MAP_BALANCE = {  # RPT_F10_FINANCE_GBALANCE 资产负债表
     "short_term_borrowings": ["SHORT_LOAN", "SHORT_TERM_LOAN"],
     "accounts_payable": ["ACCOUNTS_PAYABLE"],
     "total_liabilities": ["TOTAL_LIABILITIES"],
+    # 所有者权益合计(含少数股东权益)
     "total_equity": ["TOTAL_EQUITY"],
+    # 归属于母公司股东的权益(归母权益)。ROE/PB 的分母必须用它;
+    # 旧版本只采了 TOTAL_EQUITY, 导致 ROE/PB 分子分母口径不一致, 详见技术文档「指标口径」。
+    "total_equity_parent": ["TOTAL_PARENT_EQUITY", "PARENT_EQUITY", "TOTAL_EQUITY_PARENT"],
     "current_assets_total": ["TOTAL_CURRENT_ASSETS"],
     "current_liabilities_total": ["TOTAL_CURRENT_LIAB"],
 }
@@ -242,6 +247,9 @@ def main():
     parser.add_argument("--replace", action="store_true", help="配合--db: 清空并整体替换")
     parser.add_argument("--debug", action="store_true", help="打印接口可用字段")
     parser.add_argument("--codes", default=None, help="仅处理指定代码, 逗号分隔(测试用)")
+    parser.add_argument("--out", default="sql/03_real_data.sql",
+                        help="输出 SQL 路径(默认 sql/03_real_data.sql)。"
+                             "注意: 生成的脚本会 TRUNCATE 五张业务表, 建议先备份或输出到临时路径核对差异")
     args = parser.parse_args()
 
     companies = COMPANIES
@@ -296,7 +304,7 @@ def main():
                 share_cap = cur_shares
                 if share_cap:
                     warnings.append("{} {} 年报无股本字段, 用当前总股本近似".format(code, year))
-            # 22 个科目
+            # 23 个科目
             for st, mapping in [("income", MAP_INCOME), ("balance", MAP_BALANCE),
                                 ("cashflow", MAP_CASHFLOW)]:
                 rec = year_data.get(st)
@@ -361,7 +369,7 @@ def main():
         return
 
     # ==================== 生成 SQL ====================
-    sql_path = "sql/03_real_data.sql"
+    sql_path = args.out
     lines = ["-- 真实财务数据(东财/新浪接口采集, 生成时间见下行)", "-- " + time.strftime("%Y-%m-%d %H:%M:%S")]
     lines.append("USE `financial_analysis`;")
     lines.append("SET FOREIGN_KEY_CHECKS=0;")

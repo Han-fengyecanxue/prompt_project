@@ -1,12 +1,13 @@
 {
-  "name": "vuetest",
+  "name": "financial-analysis-frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "2.0.0",
   "type": "module",
+  "description": "上市公司财报解读与行业对标系统 · 前端(Vue3 + Vite + ECharts)",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview --port 5173"
   },
   "dependencies": {
     "echarts": "^6.1.0",

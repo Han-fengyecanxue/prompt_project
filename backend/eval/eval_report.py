@@ -26,11 +26,14 @@ Prompt 工程抗数值幻觉评测脚本 (论文核心实验)
 """
 
 import argparse
+import hashlib
 import json
 import os
 import sys
+import time
 import urllib.parse
 import urllib.request
+from datetime import datetime
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -44,6 +47,11 @@ DEFAULT_PROPS = BACKEND_DIR / "src/main/resources/config/application-development
 EXAMPLE_PROPS = BACKEND_DIR / "src/main/resources/config/application-development.properties.example"
 
 STRATEGIES = ["baseline", "injected", "strict", "c_fs", "c_rp", "c_v"]
+
+# Prompt 版本标签: 策略文案(各策略 system/user 模板与 FIX_INSTRUCTION)一旦修改必须同步递增,
+# 论文中据此锁定"本次结果对应哪一版 Prompt"。每条记录另附 prompt_sha1 作为逐条指纹。
+# v1.0 = 2026-10 冻结版, 即本仓库 analysis_summary.md 所依据的版本。
+PROMPT_VERSION = "v1.0"
 
 
 # ==================== 配置读取 ====================
@@ -67,13 +75,27 @@ def read_ai_props(path):
 
 # ==================== 后端数据拉取 ====================
 
-def http_json(url, method="GET", body=None, timeout=30):
-    """极简 HTTP 客户端, 避免依赖 requests 外的第三方包。"""
-    req = urllib.request.Request(url, method=method)
-    req.add_header("Content-Type", "application/json")
+def http_json(url, method="GET", body=None, timeout=30, tries=3):
+    """极简 HTTP 客户端, 避免依赖 requests 外的第三方包。
+
+    长时评测(数十次 LLM 调用)期间后端偶发卡顿或重启会让整轮跑批作废,
+    因此对后端请求做有限重试; 失败重试之间线性退避。
+    """
     data = json.dumps(body, ensure_ascii=False).encode("utf-8") if body is not None else None
-    with urllib.request.urlopen(req, data=data, timeout=timeout) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    last = None
+    for attempt in range(1, tries + 1):
+        try:
+            req = urllib.request.Request(url, method=method)
+            req.add_header("Content-Type", "application/json")
+            with urllib.request.urlopen(req, data=data, timeout=timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except Exception as e:                                    # noqa: BLE001
+            last = e
+            if attempt < tries:
+                print("  [warn] 后端请求失败(%d/%d): %s -> %.0fs 后重试"
+                      % (attempt, tries, e, attempt * 3))
+                time.sleep(attempt * 3)
+    raise RuntimeError("后端请求连续 %d 次失败: %s" % (tries, last))
 
 
 def fetch_companies():
@@ -193,7 +215,9 @@ def build_messages(strategy, name, code, year, context_json):
 
 # ==================== LLM 调用 (OpenAI 兼容: DeepSeek / Ollama 等) ====================
 
-def call_llm(msgs, cfg):
+def call_llm(msgs, cfg, stats=None):
+    """调用 OpenAI 兼容接口。传入 stats(dict) 时, 就地累计耗时、token 用量与接口实际返回的模型名,
+    供论文"成本与时延"一节使用。"""
     url = cfg["base_url"].rstrip("/") + "/chat/completions"
     body = {
         "model": cfg["model"],
@@ -209,23 +233,34 @@ def call_llm(msgs, cfg):
     req.add_header("Content-Type", "application/json")
     if cfg.get("api_key"):
         req.add_header("Authorization", "Bearer " + cfg["api_key"])
+    t0 = time.perf_counter()
     with urllib.request.urlopen(req, data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
                                timeout=cfg.get("timeout", 60)) as resp:
         result = json.loads(resp.read().decode("utf-8"))
+    if stats is not None:
+        stats["elapsed_s"] = round(stats.get("elapsed_s", 0.0) + (time.perf_counter() - t0), 3)
+        stats["llm_calls"] = stats.get("llm_calls", 0) + 1
+        usage = result.get("usage") or {}
+        for k in ("prompt_tokens", "completion_tokens", "total_tokens"):
+            if isinstance(usage.get(k), int):
+                stats[k] = stats.get(k, 0) + usage[k]
+        # 接口回显的实际服务模型名(比本地配置更可信, 用于溯源)
+        if result.get("model"):
+            stats["model"] = result["model"]
     return result["choices"][0]["message"]["content"]
 
 
-def generate_with_validation(msgs, cfg, context_str):
+def generate_with_validation(msgs, cfg, context_str, stats=None):
     """C+V 生成后校验器: 生成 → 校验 → 若有未溯源数字则带修正指令重生成一次 → 返回修正版。
     返回 (最终回答, 校验结果, 是否触发过重试)。"""
-    answer = call_llm(msgs, cfg)
+    answer = call_llm(msgs, cfg, stats)
     res = report_validator.evaluate_answer(answer, context_str)
     suspicious = res["unverified"] or []
     if suspicious:
         fix = FIX_INSTRUCTION.format(vals="、".join(str(u) for u in suspicious[:8]))
         msgs2 = msgs[:] + [{"role": "user", "content": fix}]
         try:
-            answer2 = call_llm(msgs2, cfg)
+            answer2 = call_llm(msgs2, cfg, stats)
             res2 = report_validator.evaluate_answer(answer2, context_str)
             if res2["acc"] >= res["acc"] and len(res2["unverified"]) < len(suspicious):
                 return answer2, res2, True
@@ -333,12 +368,16 @@ def run():
             else:
                 msgs = build_messages(s, c.get("stockName"), c.get("stockCode"),
                                       args.year, context_json)
+                prompt_sha1 = hashlib.sha1(
+                    json.dumps(msgs, ensure_ascii=False, sort_keys=True).encode("utf-8")
+                ).hexdigest()[:16]
+                stats = {}
                 try:
                     retried = False
                     if s == "c_v":
-                        answer, res, retried = generate_with_validation(msgs, cfg, context_str)
+                        answer, res, retried = generate_with_validation(msgs, cfg, context_str, stats)
                     else:
-                        answer = call_llm(msgs, cfg)
+                        answer = call_llm(msgs, cfg, stats)
                         res = report_validator.evaluate_answer(answer, context_str)
                     verdict = {"acc": "%.1f" % res["acc"]}
                     per_strategy[s].append(res["acc"])
@@ -357,6 +396,18 @@ def run():
                         "acc": res["acc"], "acc_loose": acc_loose,
                         "claims": res["claims"], "verified": res["verified"],
                         "unverified": res["unverified"],
+                        # ---- 复现与成本信息(论文"实验设置"/"成本与时延"用) ----
+                        "model": stats.get("model", cfg["model"]),
+                        "temperature": cfg["temperature"],
+                        "base_url": cfg["base_url"],
+                        "prompt_version": PROMPT_VERSION,
+                        "prompt_sha1": prompt_sha1,
+                        "llm_calls": stats.get("llm_calls"),
+                        "elapsed_s": stats.get("elapsed_s"),
+                        "prompt_tokens": stats.get("prompt_tokens"),
+                        "completion_tokens": stats.get("completion_tokens"),
+                        "total_tokens": stats.get("total_tokens"),
+                        "ts": datetime.now().isoformat(timespec="seconds"),
                     })
                 except Exception as e:
                     verdict = {"acc": "ERR", "reason": str(e)[:120]}

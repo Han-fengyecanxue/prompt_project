@@ -2,9 +2,12 @@
 """
 论文图表生成器: Prompt配置对"数值幻觉"影响的对比图(统一严格口径)
 =================================================
-数据: ../docs/eval_data.csv (真实实测回填后可重跑)
+数据: ../docs/eval_data.csv
 口径: accuracy=数值引用准确率(严格, 数字须与注入锚点一致)
       halls=每份报告平均未溯源数字数(幻觉数)
+筛选: 默认只绘制 source=实测 的行。source 非"实测"的行(如"系统mock模式")是确定性功能
+      测试而非大模型实验组, 混入插图会被误读为"存在准确率 100% 的模型"。
+      确需一并查看时加 --include-nonreal。
 输出: ../docs/figures/ 下 2 张 300dpi PNG:
   fig1_accuracy.png       数值引用准确率对比
   fig2_hallucinations.png 疑似幻觉数字数对比(越低越好)
@@ -113,13 +116,24 @@ def fig_halls(rows):
 
 
 def main():
+    include_nonreal = "--include-nonreal" in sys.argv
     rows = load()
     print("读取 %d 行实验数据: %s" % (len(rows), CSV))
     real = [r for r in rows if r["source"] == "实测"]
-    if real:
-        print("实测行:", ", ".join(r["label"] for r in real))
-    else:
+    skipped = [r for r in rows if r["source"] != "实测"]
+    if not real:
         print("警告: 当前无实测数据行(请将 report_validator 实测结果回填 eval_data.csv)")
+    else:
+        print("实测行:", ", ".join(r["label"] for r in real))
+    if skipped:
+        # 非实测行(如系统 mock 模式)不是大模型实验组, 默认不进论文插图,
+        # 否则读者会误以为存在一个准确率 100% 的"模型"。
+        names = ", ".join("%s(source=%s)" % (r["label"], r["source"]) for r in skipped)
+        if include_nonreal:
+            print("注意: --include-nonreal 已启用, 下列非实测行将一并绘制: " + names)
+        else:
+            print("已排除非实测行(非大模型实验组, 不参与论文插图): " + names)
+            rows = real
     fig_accuracy(rows)
     fig_halls(rows)
     print("图表目录:", OUT)

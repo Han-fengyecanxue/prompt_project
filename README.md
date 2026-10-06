@@ -12,17 +12,22 @@ prompt_project/
 │   ├── src/                  #   Java 源码(controller/service/mapper/entity)
 │   ├── tools/                #   Python 工具(报告数值校验 / 图表生成 / md2docx 转换)
 │   ├── docs/                 #   文档(.md 为源 · .docx 由 tools/md2docx.py 生成) + 图表
-│   ├── eval/                 #   论文评测脚本(analyze.py / eval_report.py)与结果
+│   ├── eval/                 #   论文对照实验: 评测脚本 + 逐条原始记录 + 统计脚本 + 结论(README.md)
 │   ├── tests/                #   Python 质量测试
-│   └── README.md             #   后端详细说明(克隆、初始化、启动、API)
-├── frontend/                 # 前端: Vue3 + Vite + ECharts(独立仓库 front.git, 原 Desktop\vuetest)
-│   └── src/components/       #   公司查询/财务画像(图表)/AI解读/行业排行/智能筛选
+│   └── README.md             #   后端详细说明(克隆、初始化、启动、接口)
+├── frontend/                 # 前端: Vue3 + Vite + ECharts(独立仓库 front.git)
+│   ├── src/views/            #   六大页面: 系统概览/公司查询/财务画像/AI解读/行业排行/智能筛选
+│   ├── src/components/       #   外壳(侧边导航/顶栏/公司选择器/通知) + 通用组件(图表/KPI卡/空状态/骨架屏)
+│   ├── src/utils/            #   格式化 · 安全 Markdown 渲染 + 数值溯源校验 · ECharts 主题
+│   ├── src/styles/           #   设计令牌 + 通用组件样式(无 UI 组件库依赖)
+│   └── README.md             #   前端结构与功能说明
 ├── 启动后端.bat              # 双击启动后端(:8091)
 ├── 启动前端.bat              # 双击启动前端(:5173)
+├── 论文示例_….docx           # 论文正文草稿(沿用早期文件名; 数字随实验更新)
 └── README.md                 # 本文件
 ```
 
-> 说明: `论文示例_….docx` 为申报书/论文参考材料(保留在根目录);`~$` 开头是 Word 打开时的临时锁文件,关闭 Word 后可删除。
+> 说明: 根目录的 `~$` 开头文件是 Word 打开时的临时锁文件, 关闭 Word 后可删除。
 
 ## 🚀 快速启动(双击两个脚本即可)
 
@@ -37,11 +42,13 @@ prompt_project/
 
 | 文档 | 位置 | 内容 |
 |---|---|---|
-| 后端技术文档 | `backend/docs/技术文档.md` | 架构、数据库、接口、计算引擎说明 |
+| 后端技术文档 | `backend/docs/技术文档.md` | 架构、数据库、**指标口径(含 ROE/PB 分母)**、验证状态与已知局限 |
 | 接口设计表 | `backend/docs/接口设计表.md` | 全部 REST 接口入参/出参 |
-| **Prompt 与模型上手指南** | `backend/docs/上手指南_Prompt与模型.md` | Prompt 工程 / 云端 API(DeepSeek 等) / 本地模型(Ollama) / 文生图提示词 |
-| 深化研究方案 | `backend/docs/Prompt工程深化研究与系统扩展方案.md` | 幻觉校验、实验设计与扩展点 |
+| **Prompt 与模型上手指南** | `backend/docs/上手指南_Prompt与模型.md` | Prompt 工程 / 云端 API(DeepSeek 等) / 本地模型(Ollama) / 排错速查 |
+| 深化研究方案 | `backend/docs/Prompt工程深化研究与系统扩展方案.md` | 研究问题、数据核验、Prompt 对照实验设计、评价指标 |
+| **实验与论文数据** | `backend/eval/README.md` · `analysis_summary.md` | 评测脚本、逐条记录、描述统计与 Wilcoxon 检验、已知局限 |
 | 后端 README | `backend/README.md` | 协作者克隆/构建/启动指南 |
+| **前端说明** | `frontend/README.md` | 前端目录结构、页面功能、设计说明与常见问题 |
 
 > 📄 文档约定: `*.md` 为**唯一源文件**; `*.docx` 由 `backend/tools/md2docx.py` 从同名 `.md` 生成, 属**派生产物**, 请勿直接编辑。文档索引见 `backend/docs/README.md`。
 

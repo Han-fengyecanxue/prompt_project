@@ -1,0 +1,94 @@
+/* ==========================================================================
+   设计令牌 (Design Tokens)
+   配色遵循"学术蓝 + 中性灰"的专业金融分析系统风格; 所有组件只引用变量, 便于整体换肤
+   ========================================================================== */
+:root {
+  /* ---------- 品牌主色 ---------- */
+  --c-brand-900: #0b1f3a;
+  --c-brand-800: #12305a;
+  --c-brand-700: #17406f;
+  --c-brand-600: #1d5288;
+  --c-brand-500: #2f6fd0;
+  --c-brand-400: #4a89e0;
+  --c-brand-300: #8ab4ec;
+  --c-brand-100: #dfeafb;
+  --c-brand-50:  #f0f5fd;
+
+  /* ---------- 中性色 ---------- */
+  --c-bg:        #eef2f7;
+  --c-surface:   #ffffff;
+  --c-surface-2: #f7f9fc;
+  --c-surface-3: #eef2f7;
+  --c-border:    #e1e8f0;
+  --c-border-2:  #d3dde8;
+  --c-text:      #1b2733;
+  --c-text-2:    #52637a;
+  --c-text-3:    #8a97a8;
+  --c-text-inv:  #ffffff;
+
+  /* ---------- 语义色 ---------- */
+  --c-up:      #10a05a;
+  --c-up-bg:   #e6f6ee;
+  --c-down:    #d93a44;
+  --c-down-bg: #fdecec;
+  --c-warn:    #d98a10;
+  --c-warn-bg: #fdf3e0;
+  --c-info:    #2f6fd0;
+  --c-info-bg: #e8f0fd;
+  --c-purple:  #7b58d6;
+
+  /* ---------- 图表色板 ---------- */
+  --chart-1: #1d5288;
+  --chart-2: #2f6fd0;
+  --chart-3: #21b083;
+  --chart-4: #e2a134;
+  --chart-5: #7b58d6;
+  --chart-6: #d9605c;
+  --chart-7: #3aa6b9;
+  --chart-8: #93a3b8;
+
+  /* ---------- 间距 ---------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 40px;
+
+  /* ---------- 圆角 ---------- */
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 999px;
+
+  /* ---------- 阴影 ---------- */
+  --sh-1: 0 1px 2px rgba(16, 35, 61, .06);
+  --sh-2: 0 2px 8px rgba(16, 35, 61, .07);
+  --sh-3: 0 8px 24px rgba(16, 35, 61, .10);
+  --sh-brand: 0 6px 18px rgba(29, 82, 136, .22);
+
+  /* ---------- 字体 ---------- */
+  --font-sans: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Source Han Sans SC',
+               'Helvetica Neue', Arial, sans-serif;
+  --font-num: 'DIN Alternate', 'Segoe UI', 'Helvetica Neue', Consolas, var(--font-sans);
+
+  /* ---------- 布局 ---------- */
+  --sidebar-w: 232px;
+  --sidebar-w-collapsed: 68px;
+  --topbar-h: 60px;
+  --content-max: 1440px;
+
+  /* ---------- 动效 ---------- */
+  --ease: cubic-bezier(.4, 0, .2, 1);
+  --dur: .18s;
+}
+
+/* 紧凑模式: 14 寸笔记本上减少留白 (顶栏可切换) */
+html[data-density="compact"] {
+  --sp-5: 14px;
+  --sp-6: 16px;
+  --sp-7: 22px;
+}

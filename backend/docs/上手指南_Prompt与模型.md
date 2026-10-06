@@ -1,5 +1,4 @@
-# 上手指南:Prompt 工程 · 云端 API · 本地模型 · 文生图
-
+# 上手指南:Prompt 工程 · 云端 API · 本地模型
 > 配套项目:基于 Prompt 工程的上市公司财报解读与行业对标系统(Spring Boot + Vue3)
 > 适用:论文撰写、答辩演示、日常自学。所有示例都可在本机直接跑通。
 
@@ -12,10 +11,9 @@
 | 一、Prompt 工程 | 看懂/改进本项目"三层 Prompt",自己能写出高质量提示词 | 20 分钟 |
 | 二、云端 API | 申请 DeepSeek/通义 key,把本系统从 mock 切换成真大模型 | 20 分钟 |
 | 三、本地模型 | 装 Ollama,离线跑 DeepSeek-R1/Qwen,不花钱接入系统 | 30 分钟 |
-| 四、文生图 Prompt | 用公式写图生图提示词,给论文/海报出概念图 | 20 分钟 |
-| 五、速查表 | 常见命令/报错/接线清单,卡住时先翻这里 | 随用随查 |
+| 四、速查表 | 常见命令/报错/接线清单,卡住时先翻这里 | 随用随查 |
 
-一句话总纲:**Prompt 是"把需求说清楚"的能力;API 是"花钱租模型";本地模型是"自己养模型";文生图是"用同一套 Prompt 功夫指挥画画模型"。** 学会前两者,后两者只是换了模型。
+一句话总纲:**Prompt 是"把需求说清楚"的能力;API 是"花钱租模型";本地模型是"自己养模型"。** 学会前两者,后者只是换了模型。
 
 ---
 
@@ -183,62 +181,8 @@ ai.model=qwen2.5:7b                             # 必须是已 pull 的模型名
 
 ---
 
-## 四、Prompt 优化文生图
-
-### 4.1 原理一句话
-
-文生图模型(扩散模型)把文字"翻译"成画面。它**不懂语法只懂关键词**,所以画质好坏 90% 取决于你的 Prompt 里堆了哪些"词块"和"风格锚点";另 10% 是负向提示词与参数。
-
-### 4.2 工具选择
-
-| 场景 | 工具 | 说明 |
-|---|---|---|
-| 免费在线(中文) | 通义万相、即梦、文心一格 | 网页直接用,适合给论文配概念图 |
-| 云端 API | 通义万相(DashScope)、OpenAI DALL·E 3 | 可编程批量生成 |
-| 本地免费 | Stable Diffusion WebUI / ComfyUI | 需显卡(6G+),可控性最强 |
-
-### 4.3 万能公式(重点背这一段)
-
-```
-[主体 Subject] + [动作/状态] + [风格 Style] + [构图/视角 View] + [光线/氛围 Lighting] + [材质/细节 Detail] + [画质词 Quality] + [画幅 Ratio]
-```
-
-示例(英文最稳,中文模型可写中文):
-
-```
-一只戴金丝眼镜的柴犬会计正在翻阅财报, 桌上散落图表, 
-赛博朋克+中国风海报风格, 特写+仰视构图, 工作室光, 高细节,
-8k, 超清, 电影感 —— (positive)
-
-模糊, 低清, 畸形, 多余手指, 水印, 文字错乱 —— (negative 负向词)
-```
-
-要点:
-- **风格词决定"画风"**:水彩 / 3D 渲染 / 油画 / 国潮插画 / 扁平设计 / 写实摄影,一次只混 1~2 种,混多了脏。
-- **画质词放最后**:`highly detailed, 8k, sharp focus, masterpiece`。
-- **写实/人物时负向词必加**:`extra fingers, deformed hands, blurry, watermark, text`。
-- **构图词**控制镜头感:`close-up(特写) / wide shot(远景) / from above(俯视) / eye level`。
-- **一次只改一个变量**:固定 seed,改一个词对比,才知道哪个词起效(迭代调优法)。
-
-### 4.4 本项目/论文可直接抄的模板
-
-1. **系统架构图风格封面**(答辩 PPT/论文封面背景):
-   `data flow architecture diagram, financial system, server room with glowing data streams, minimal tech poster, dark blue theme, wide shot, cinematic light, ultra detailed, 16:9`
-2. **AI + 金融概念图**(论文"研究背景"配图):
-   `robot analyst examining glowing financial charts in a library, neural network light threads, soft depth of field, elegant fintech illustration, 8k`
-3. **数据可视化海报**(系统介绍页):
-   `dashboard UI mockup floating in 3D space, line charts and bar charts, clean fintech style, soft studio lighting, high detail, isometric view`
-4. **白酒行业营收柱状图装饰**(实验截图旁):
-   `Chinese baijiu bottles aligned like bar chart, warm amber light, product photography style, clean white background`
-5. 中文可先写中文再让大模型翻成英文(给第四章第一节的角色模板即可),翻译时注意把"形容词词块"保持逗号分隔。
-
-> 合规提醒:论文若用 AI 生成图,按学校要求在图注注明"(AI 生成,提示词见附录)"即可;本项目数据图表(折线/柱状)由系统 ECharts 真实生成,不属于 AI 生成。
-
----
-
-## 五、速查表
-
-### 5.1 本项目接线清单(大模型接入排错顺序)
+## 四、速查表
+### 4.1 本项目接线清单(大模型接入排错顺序)
 
 ```
 1. 配置:application-development.properties 的 provider/base-url/api-key/model
@@ -249,7 +193,7 @@ ai.model=qwen2.5:7b                             # 必须是已 pull 的模型名
 6. 还不行 → 看 backend.err.log / 厂商控制台用量
 ```
 
-### 5.2 常用命令
+### 4.2 常用命令
 
 ```bash
 # 云端直测(DeepSeek)
@@ -262,7 +206,7 @@ ollama run qwen2.5:7b            # 交互对话
 curl http://localhost:11434/v1/chat/completions -d '{"model":"qwen2.5:7b","messages":[{"role":"user","content":"你好"}]}'
 ```
 
-### 5.3 报错速查
+### 4.3 报错速查
 
 | 报错 | 意思 | 怎么办 |
 |---|---|---|
