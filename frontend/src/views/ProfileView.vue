@@ -1,7 +1,7 @@
 <script setup>
 /**
- * 财务画像 · 行业对标
- * 结构: 公司总览 -> 关键指标卡 -> 六维能力雷达 -> 指标趋势 -> 行业对标(图 + 明细表) -> 指标速览 -> 报表科目
+ * 财务画像
+ * 结构: 公司总览/关键指标卡/六维能力雷达/指标趋势/行业对标/指标速览/报表科目
  * 数据: /api/finance/profile + /api/finance/benchmark + /api/finance/trend
  */
 import { ref, computed, watch, onMounted } from 'vue'
@@ -69,7 +69,7 @@ onMounted(load)
 watch(company, load)
 watch(year, () => { load(); toast(`已切换到 ${year.value} 年报`, 'info', 1600) })
 
-/* ------------------------------------------------------------- 派生数据 */
+/* 派生数据 */
 const items = computed(() => (benchmark.value && benchmark.value.items) || [])
 const pick = (code) => items.value.find(i => i.indicatorCode === code) || null
 
@@ -82,7 +82,7 @@ const rating = computed(() => ratingOf(avgScore.value))
 const best = computed(() => [...items.value].filter(i => Number.isFinite(Number(i.score))).sort((a, b) => b.score - a.score).slice(0, 3))
 const worst = computed(() => [...items.value].filter(i => Number.isFinite(Number(i.score))).sort((a, b) => a.score - b.score).slice(0, 3))
 
-/** 六维得分: 维度内各指标的方向调整评分均值 */
+/** 六维得分 */
 const dimScores = computed(() => DIMENSIONS.map(dim => {
   const list = items.value.filter(i => i.dimension === dim && Number.isFinite(Number(i.score)))
   return {
@@ -92,7 +92,7 @@ const dimScores = computed(() => DIMENSIONS.map(dim => {
   }
 }).filter(d => d.count))
 
-/** 关键指标卡: [指标编码, 展示名, 单位提示] */
+/* 关键指标卡: [指标编码, 展示名, 单位提示] */
 const KPIS = [
   ['roe', '净资产收益率', '盈利核心'],
   ['gross_margin', '毛利率', '产品竞争力'],
@@ -106,7 +106,7 @@ const yearRange = computed(() => {
   return ys.length ? [Math.min(...ys), Math.max(...ys)] : [2021, 2025]
 })
 
-/* ------------------------------------------------------------- 图表 option */
+/* 图表 option */
 const radarOption = computed(() => {
   const dims = dimScores.value
   if (!dims.length) return emptyOption('暂无对标数据')
@@ -261,7 +261,7 @@ const benchOption = computed(() => {
   }
 })
 
-/** 报表科目: 按报表分组, 组内按金额绝对值排序并给出相对条形 */
+/* 报表科目: 按报表分组, 组内按金额绝对值排序并给出相对条形 */
 const reportGroups = computed(() => {
   const list = (profile.value && profile.value.items) || []
   const map = new Map()
@@ -282,7 +282,7 @@ const reportGroups = computed(() => {
   })
 })
 
-/* ------------------------------------------------------------- 交互 */
+/* 交互 */
 function toggleTrend(code) {
   const i = trendCodes.value.indexOf(code)
   if (i >= 0) {
@@ -334,7 +334,7 @@ function yearRangeList() {
 }
 
 const goAi = () => emit('navigate', 'ai')
-/** 打印(模板中无法直接访问 window, 故包一层) */
+/* 打印 */
 const doPrint = () => window.print()
 </script>
 
@@ -342,7 +342,7 @@ const doPrint = () => window.print()
   <div class="profile">
     <EmptyState
       v-if="!company"
-      icon="🎯" title="尚未选择公司"
+      icon="⚠️" title="尚未选择公司"
       desc="请先在「公司查询」中检索并点击一家公司, 或直接使用顶栏右侧的公司选择器。"
       action-text="前往公司查询" @action="emit('navigate', 'list')"
     />
@@ -386,7 +386,7 @@ const doPrint = () => window.print()
         </div>
 
         <div class="ov-actions no-print">
-          <button class="btn" @click="goAi">🤖 生成 AI 解读</button>
+          <button class="btn" @click="goAi">💡 生成 AI 解读</button>
           <button class="btn btn-ghost" :disabled="!items.length" @click="exportCsv">⤓ 导出对标 CSV</button>
           <button class="btn btn-ghost" :disabled="!trendRaw.length" @click="exportTrendCsv">⤓ 导出趋势 CSV</button>
           <button class="btn btn-ghost" @click="doPrint">🖨️ 打印 / 存 PDF</button>
@@ -414,7 +414,7 @@ const doPrint = () => window.print()
       <div class="grid-2">
         <div class="card">
           <div class="card-hd">
-            <div class="card-title"><span class="ico">🕸️</span>六维能力雷达</div>
+            <div class="card-title"><span class="ico">📊</span>六维能力雷达</div>
             <span class="card-sub">维度内指标评分均值, 50 分为行业中位水平</span>
           </div>
           <EChart :option="radarOption" height="352px" :loading="loading" :empty="!dimScores.length" filename="六维能力雷达" />

@@ -14,9 +14,9 @@ import java.util.Map;
 
 /**
  * 财务指标计算引擎
- * 输入: 某公司某年度全部报表项目(编码->金额) + 上年数据(成长性指标) + 估值快照(PE/PB)
+ * 输入: 某公司某年度全部报表项目 + 上年数据 + 估值快照
  * 输出: 标准化财务指标列表
- * 原则: 所有数字由系统精确计算, 可溯源、可验证(双层解耦架构的底层)
+ * 原则: 所有数字由系统精确计算, 可溯源、可验证、无幻觉
  */
 public class IndicatorCalcEngine {
 
@@ -37,7 +37,6 @@ public class IndicatorCalcEngine {
         BigDecimal cost = items.get("operating_cost");
         BigDecimal np = items.get("net_profit");
         BigDecimal npParent = items.get("net_profit_parent");
-        // 归属于母公司股东的权益(归母权益)。ROE/PB 的分母必须用它, 不能用 total_equity
         BigDecimal equityParent = items.get("total_equity_parent");
         BigDecimal ta = items.get("total_assets");
         BigDecimal tl = items.get("total_liabilities");
@@ -50,11 +49,6 @@ public class IndicatorCalcEngine {
         Map<String, BigDecimal> values = new HashMap<>();
 
         // ---- 盈利能力 ----
-        // ROE = 归母净利润 / 平均归母股东权益(分子分母同为"归母"口径)
-        // 口径说明: total_equity 是"所有者权益合计"(含少数股东权益), 与归母净利润不匹配,
-        //   用它作分母会系统性低估 ROE(实测 24 家公司 2021-2025 共 120 个公司年度,
-        //   平均低估 0.72pp, 最大 5.20pp, 19% 的样本相对偏差 >5%)。
-        //   若缺少归母权益则不产出该指标(与"缺失输入不产出、不以零代替"的约定一致)。
         BigDecimal equityParentPrior = priorItems == null ? null : priorItems.get("total_equity_parent");
         BigDecimal avgEquityParent = average(equityParent, equityParentPrior);
         values.put("roe", percent(npParent, avgEquityParent));
@@ -63,7 +57,7 @@ public class IndicatorCalcEngine {
         // 归母净利率
         values.put("net_margin_parent", percent(npParent, rev));
 
-        // ---- 成长性(需上年数据) ----
+        // 成长性
         if (priorItems != null) {
             BigDecimal revPrior = priorItems.get("operating_revenue");
             BigDecimal npParentPrior = priorItems.get("net_profit_parent");
@@ -71,21 +65,21 @@ public class IndicatorCalcEngine {
             values.put("profit_growth", percent(subtract(npParent, npParentPrior), abs(npParentPrior)));
         }
 
-        // ---- 财务风险 ----
+        // 财务风险
         values.put("asset_liability_ratio", percent(tl, ta));
         values.put("current_ratio", divide(ca, cl));
         values.put("quick_ratio", divide(subtract(ca, inv), cl));
 
-        // ---- 盈利质量 ----
+        // 盈利质量
         values.put("cashflow_quality", divide(opcf, np));
 
-        // ---- 每股指标 ----
+        // 每股指标
         values.put("eps", eps);
 
-        // ---- 估值(需估值快照) ----
+        // 估值
         if (valuation != null && valuation.getMarketCap() != null
                 && valuation.getMarketCap().compareTo(BigDecimal.ZERO) > 0) {
-            // PE = 总市值 / 归母净利润; PB = 总市值 / 归母股东权益(与总市值的"全股本"口径一致)
+            // PE = 总市值 / 归母净利润; PB = 总市值 / 归母股东权益
             values.put("pe", divide(valuation.getMarketCap(), npParent));
             values.put("pb", divide(valuation.getMarketCap(), equityParent));
         }
@@ -106,7 +100,7 @@ public class IndicatorCalcEngine {
         return result;
     }
 
-    // ================== 基础运算工具 ==================
+    // 基础运算工具
 
     private static BigDecimal percent(BigDecimal num, BigDecimal den) {
         if (num == null || den == null || den.compareTo(BigDecimal.ZERO) == 0) return null;

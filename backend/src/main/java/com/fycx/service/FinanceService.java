@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public interface FinanceService {
 
-    /** 行业列表(含公司数) */
+    /** 行业列表 */
     List<IndustryVO> listIndustries();
 
     /** 公司分页查询 */
@@ -21,13 +21,13 @@ public interface FinanceService {
     /** 公司详情 */
     CompanyVO getCompany(Integer companyId);
 
-    /** 财务画像: 原始数据 + 指标 + 估值 */
+    /** 财务画像 */
     ProfileVO getProfile(Integer companyId, Integer fiscalYear, String reportPeriod);
 
     /** 多年度指标趋势 */
     List<TrendVO> getTrend(Integer companyId, List<String> indicators, Integer startYear, Integer endYear);
 
-    /** 行业对标(公司 vs 行业基准 + 百分位 + 排名) */
+    /** 行业对标 */
     BenchmarkVO getBenchmark(Integer companyId, Integer fiscalYear, String reportPeriod);
 
     /** 行业指标排名 */
@@ -37,6 +37,6 @@ public interface FinanceService {
     /** 多条件交叉筛选 */
     ScreeningVO screening(ScreeningRequest req);
 
-    /** 重算指标与行业对标(数据层 -> 计算层 -> 存储) */
+    /** 重算指标与行业对标 */
     Map<String, Object> recalc(Integer industryId, Integer fiscalYear);
 }

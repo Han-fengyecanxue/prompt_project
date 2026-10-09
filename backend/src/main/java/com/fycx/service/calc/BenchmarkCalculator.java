@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * 行业对标统计引擎
- * 计算: 均值/中位数/标准差/P25/P75/公司数量 + 百分位排名 + 名次
+ * 计算: 均值/中位数/标准差/P25/P75/公司数量/百分位排名
  * 排名方向: higher_better 指标值越大排名越靠前; lower_better 指标值越小排名越靠前
  */
 public class BenchmarkCalculator {
@@ -29,7 +29,7 @@ public class BenchmarkCalculator {
         public int count;
     }
 
-    /** 计算一组值的统计量(忽略 null) */
+    /** 计算一组值的统计量 */
     public static Stats stats(List<BigDecimal> rawValues) {
         Stats s = new Stats();
         List<BigDecimal> values = new ArrayList<>();
@@ -51,7 +51,7 @@ public class BenchmarkCalculator {
         s.p25 = quantile(values, 0.25);
         s.p75 = quantile(values, 0.75);
 
-        // 标准差(总体标准差)
+        // 标准差
         BigDecimal variance = BigDecimal.ZERO;
         for (BigDecimal v : values) {
             BigDecimal diff = v.subtract(s.avg);
@@ -102,8 +102,6 @@ public class BenchmarkCalculator {
 
     /**
      * 方向调整后的评分(0-100, 越高越优):
-     * higher_better -> score = 原始百分位
-     * lower_better  -> score = 100 - 原始百分位
      */
     public static BigDecimal score(BigDecimal percentile, String betterDirection) {
         if (percentile == null) return null;
@@ -149,7 +147,7 @@ public class BenchmarkCalculator {
         return Comparator.reverseOrder();
     }
 
-    /** 排名用: 排序后的完整列表(含公司ID映射由调用方处理) */
+    /** 排名用: 排序后的完整列表 */
     public static List<BigDecimal> sortedValues(List<BigDecimal> rawValues, String betterDirection) {
         List<BigDecimal> values = new ArrayList<>();
         for (BigDecimal v : rawValues) {

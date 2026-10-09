@@ -50,7 +50,7 @@ const emit = defineEmits(['navigate'])
       <div v-show="!store.sidebarCollapsed" class="foot-info">
         <div class="foot-row"><span class="dot ok"></span>数据源 东方财富 / 新浪</div>
         <div class="foot-row">样本 {{ companyCount }} 家 · 2021–2025 年报</div>
-        <div class="foot-row dim2">v2.0 · 省级大创项目</div>
+        <div class="foot-row dim2">v1.0</div>
       </div>
       <button class="icon-btn collapse-btn" :title="store.sidebarCollapsed ? '展开导航' : '收起导航'" @click="toggleSidebar">
         {{ store.sidebarCollapsed ? '»' : '«' }}

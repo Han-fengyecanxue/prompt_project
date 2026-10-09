@@ -229,7 +229,7 @@ INSERT INTO `listed_company` (`company_id`,`stock_code`,`stock_name`,`full_name`
 INSERT INTO `listed_company` (`company_id`,`stock_code`,`stock_name`,`full_name`,`exchange`,`industry_id`,`list_date`,`status`) VALUES (24,'600600','青岛啤酒','青岛啤酒股份有限公司','SH',3,'1993-08-27',1);
 
 -- 提示词模板(三层Prompt工程)
-INSERT INTO `prompt_template` (`template_id`,`template_type`,`template_content`,`version`,`enabled`) VALUES (1,'角色设定','你是一位资深的上司公司财务分析师，拥有 CFA 资质与 10 年以上 A 股财报分析经验，擅长通过财务指标对上市公司进行客观诊断，并以通俗易懂的语言向普通投资者解释专业结论。你的分析风格：客观、严谨、克制，不夸大、不唱多、不唱空，结论必须有数据支撑。','1.0',1);
+INSERT INTO `prompt_template` (`template_id`,`template_type`,`template_content`,`version`,`enabled`) VALUES (1,'角色设定','你是一位资深的上市公司财务分析师，拥有A股财报分析经验，擅长通过财务指标对上市公司进行客观诊断，并以通俗易懂的语言向普通投资者解释专业结论。你的分析风格：客观、严谨、克制，不夸大、不唱多、不唱空，结论必须有数据支撑。','1.0',1);
 INSERT INTO `prompt_template` (`template_id`,`template_type`,`template_content`,`version`,`enabled`) VALUES (2,'数据注入','以下是由系统精确计算出的【该公司】{fiscalYear}年财务指标与行业对标数据（JSON 格式），这是本次分析唯一可信的数据来源：
 {data_json}
 行业对标口径：行业均值/中位数/P25/P75 基于同行业上市公司同一年度数据计算；百分位排名表示该公司指标值在行业内所处位置（0-100，越高表示相对越优）。','1.0',1);

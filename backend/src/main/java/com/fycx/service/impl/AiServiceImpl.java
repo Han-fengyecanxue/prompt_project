@@ -36,9 +36,9 @@ import java.util.stream.Collectors;
 
 /**
  * AI 解读服务实现
- * 双层解耦: 底层数据由 FinanceService 精确计算 -> 组装"数据注入"层 -> 约束大模型基于数据生成报告
- * provider=mock 时无需 API Key, 由模板规则生成确定性报告(演示/离线可用)
- * provider=openai 时调用任意 OpenAI 兼容接口(DeepSeek/通义/智谱等)
+ * 双层解耦: 底层数据由 FinanceService 精确计算、组装"数据注入"层、约束大模型基于数据生成报告
+ * provider=mock 时无需 API Key, 由模板规则生成确定性报告，离线可用
+ * provider=openai 时调用任意 OpenAI 兼容接口(DeepSeek/千问/智谱等)
  */
 @Service
 public class AiServiceImpl implements AiService {
@@ -80,14 +80,14 @@ public class AiServiceImpl implements AiService {
                 .build();
     }
 
-    // ================== 模板 ==================
+    // 模板
 
     @Override
     public List<PromptTemplate> listTemplates() {
         return promptTemplateMapper.selectEnabled();
     }
 
-    // ================== 简报生成 ==================
+    // 简报生成
 
     @Override
     public AiReport generateReport(AiReportRequest req) {
@@ -112,7 +112,7 @@ public class AiServiceImpl implements AiService {
                 "生成" + req.getFiscalYear() + "年度财报解读简报", vr.getAnswer(), dataJson, vr.getResult());
     }
 
-    // ================== 对话 ==================
+    // 对话
 
     @Override
     public AiReport chat(ChatRequest req) {
@@ -142,7 +142,7 @@ public class AiServiceImpl implements AiService {
                 req.getQuestion(), vr.getAnswer(), dataJson, vr.getResult());
     }
 
-    // ================== 报告记录 ==================
+    // 报告记录
 
     @Override
     public PageResult<AiReport> listReports(Integer companyId, int page, int size) {
@@ -163,9 +163,9 @@ public class AiServiceImpl implements AiService {
         return report;
     }
 
-    // ================== 三层 Prompt 组装 ==================
+    // 三层 Prompt 组装
 
-    /** 数据注入层: 把精确计算结果序列化为 JSON */
+    /** 数据注入层 */
     private String buildDataJson(BenchmarkVO benchmark) {
         try {
             Map<String, Object> root = new LinkedHashMap<>();
@@ -207,7 +207,7 @@ public class AiServiceImpl implements AiService {
         }
     }
 
-    /** 组装 system prompt: 角色设定 + 数据注入 */
+    /** 组装 system prompt */
     private String composeSystemPrompt(String dataJson, Integer fiscalYear) {
         String role = getTemplate("角色设定");
         String dataInject = getTemplate("数据注入");
@@ -216,7 +216,7 @@ public class AiServiceImpl implements AiService {
         return role + "\n\n" + dataInject;
     }
 
-    /** 组装 user prompt: 输出约束 + 用户要求 */
+    /** 组装 user prompt */
     private String composeUserPrompt(BenchmarkVO benchmark, Integer fiscalYear, String extraInstruction) {
         String outputConstraint = getTemplate("输出约束");
         String instruction = StringUtils.hasText(extraInstruction) ? extraInstruction
@@ -225,7 +225,7 @@ public class AiServiceImpl implements AiService {
         return outputConstraint + "\n\n" + instruction;
     }
 
-    /** 读取模板(DB优先, 内置默认兜底) */
+    /** 读取模板 */
     private String getTemplate(String type) {
         List<PromptTemplate> templates = promptTemplateMapper.selectEnabled();
         for (PromptTemplate t : templates) {
@@ -239,7 +239,7 @@ public class AiServiceImpl implements AiService {
     private String defaultTemplate(String type) {
         switch (type) {
             case "角色设定":
-                return "你是一位资深的上司公司财务分析师, 拥有 CFA 资质与 10 年以上 A 股财报分析经验, "
+                return "你是一位资深的上市公司财务分析师, 拥有A股财报分析经验, "
                         + "擅长通过财务指标对上市公司进行客观诊断, 并以通俗易懂的语言向普通投资者解释专业结论。"
                         + "你的分析风格: 客观、严谨、克制, 不夸大、不唱多、不唱空, 结论必须有数据支撑。";
             case "数据注入":
@@ -261,7 +261,7 @@ public class AiServiceImpl implements AiService {
         }
     }
 
-    // ================== LLM 调用 ==================
+    // LLM 调用
 
     private String callLlm(String systemPrompt, String userPrompt, List<ChatTurn> history, BenchmarkVO benchmark) {
         if ("openai".equalsIgnoreCase(provider) && StringUtils.hasText(apiKey)) {
@@ -319,10 +319,10 @@ public class AiServiceImpl implements AiService {
         return m;
     }
 
-    // ================== Mock 生成器(确定性, 防幻觉演示) ==================
+    // Mock生成器，确定性生成
 
     /**
-     * 基于注入数据生成结构化报告/回答, 所有数字均取自数据上下文, 不编造
+     * 基于注入数据生成结构化报告/回答，所有数字均取自数据上下文，不编造
      */
     private String mockGenerate(BenchmarkVO benchmark, String userPrompt, boolean isChat) {
         CompanyVO c = benchmark.getCompany();
@@ -414,7 +414,7 @@ public class AiServiceImpl implements AiService {
         return "偏弱";
     }
 
-    /** Mock 对话: 基于关键词返回数据锚定的回答 */
+    /** 基于关键词返回数据锚定的回答 */
     private String mockChatAnswer(CompanyVO c, Map<String, BenchmarkItemVO> byCode, String question) {
         String q = question == null ? "" : question;
         String ql = q.toLowerCase();
@@ -481,7 +481,7 @@ public class AiServiceImpl implements AiService {
         return v == null ? "—" : v.stripTrailingZeros().toPlainString();
     }
 
-    // ================== 保存 ==================
+    // 保存
 
     /** 生成后数值校验: 可疑数>0 且为真实LLM时触发一次"修正重试"; 返回最终答案与校验结果 */
     private ValidatedAnswer validateAndFix(String systemPrompt, String userPrompt, List<ChatTurn> history,

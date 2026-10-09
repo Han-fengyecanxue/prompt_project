@@ -54,7 +54,7 @@ public class FinanceServiceImpl implements FinanceService {
         this.valuationMapper = valuationMapper;
     }
 
-    // ================== 基础查询 ==================
+    // 基础查询
 
     @Override
     public List<IndustryVO> listIndustries() {
@@ -83,7 +83,7 @@ public class FinanceServiceImpl implements FinanceService {
         return vo;
     }
 
-    // ================== 财务画像 ==================
+    // 财务画像
 
     @Override
     public ProfileVO getProfile(Integer companyId, Integer fiscalYear, String reportPeriod) {
@@ -112,7 +112,7 @@ public class FinanceServiceImpl implements FinanceService {
         return vo;
     }
 
-    // ================== 指标趋势 ==================
+    // 指标趋势
 
     @Override
     public List<TrendVO> getTrend(Integer companyId, List<String> indicators, Integer startYear, Integer endYear) {
@@ -160,7 +160,7 @@ public class FinanceServiceImpl implements FinanceService {
         return result;
     }
 
-    // ================== 行业对标 ==================
+    // 行业对标
 
     @Override
     public BenchmarkVO getBenchmark(Integer companyId, Integer fiscalYear, String reportPeriod) {
@@ -175,7 +175,7 @@ public class FinanceServiceImpl implements FinanceService {
                 .selectByCompanyYear(companyId, fiscalYear, reportPeriod).stream()
                 .collect(Collectors.toMap(FinancialIndicator::getIndicatorCode, i -> i, (a, b) -> a));
 
-        // 行业该年度全部公司指标(联表)
+        // 行业该年度全部公司指标
         List<FinancialIndicator> industryInds = indicatorMapper
                 .selectByIndustryYear(company.getIndustryId(), fiscalYear, reportPeriod);
         Map<String, List<BigDecimal>> industryValues = new HashMap<>();
@@ -223,7 +223,7 @@ public class FinanceServiceImpl implements FinanceService {
         return vo;
     }
 
-    // ================== 行业排名 ==================
+    // 行业排名
 
     @Override
     public List<RankingItemVO> getRanking(Integer industryId, Integer fiscalYear, String reportPeriod,
@@ -270,7 +270,7 @@ public class FinanceServiceImpl implements FinanceService {
         return result;
     }
 
-    // ================== 多条件交叉筛选 ==================
+    // 多条件交叉筛选
 
     @Override
     public ScreeningVO screening(ScreeningRequest req) {
@@ -400,7 +400,7 @@ public class FinanceServiceImpl implements FinanceService {
         return detail;
     }
 
-    // ================== 指标重算(数据层 -> 计算层 -> 存储) ==================
+    // 指标重算
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -458,7 +458,7 @@ public class FinanceServiceImpl implements FinanceService {
         return result;
     }
 
-    /** 从报表项目字典取编码(缓存) */
+    /** 从报表项目字典取编码 */
     private volatile Map<Integer, String> itemCodeCache;
 
     private String itemCodeOf(Integer itemId) {
@@ -476,7 +476,7 @@ public class FinanceServiceImpl implements FinanceService {
         return itemCodeCache.get(itemId);
     }
 
-    /** 取某年度对应的估值快照(仅同年快照, 保证 PE/PB 口径一致) */
+    /** 取某年度对应的估值快照 */
     private ValuationSnapshot snapshotForYear(Integer companyId, Integer fiscalYear) {
         List<ValuationSnapshot> snapshots = valuationMapper.selectByCompany(companyId);
         if (snapshots.isEmpty()) return null;
@@ -488,13 +488,13 @@ public class FinanceServiceImpl implements FinanceService {
         return null;
     }
 
-    /** 计算行业对标统计(按 行业x年度x指标) */
+    /** 计算行业对标统计 */
     private List<IndustryBenchmark> computeBenchmarks(List<CompanyVO> companies, List<FinancialIndicator> allIndicators) {
-        // 公司 -> 行业 映射
+        // 公司和行业映射
         Map<Integer, Integer> companyIndustry = companies.stream()
                 .collect(Collectors.toMap(CompanyVO::getCompanyId, CompanyVO::getIndustryId, (a, b) -> a));
 
-        // 行业 -> 年度 -> 指标 -> 值列表
+        // 行业、年度、指标、值列表
         Map<String, List<BigDecimal>> groups = new HashMap<>();
         for (FinancialIndicator ind : allIndicators) {
             Integer industryId = companyIndustry.get(ind.getCompanyId());
@@ -527,7 +527,7 @@ public class FinanceServiceImpl implements FinanceService {
         return result;
     }
 
-    // ================== 工具 ==================
+    // 工具 
 
     private IndicatorVO toIndicatorVO(FinancialIndicator ind) {
         IndicatorVO vo = new IndicatorVO();

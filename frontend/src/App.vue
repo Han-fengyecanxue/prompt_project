@@ -1,9 +1,8 @@
 <script setup>
 /**
  * 应用外壳: 左侧导航 + 顶栏 + 内容区
- * - 图表页(概览/画像)不做缓存, 每次进入重新挂载, 避免隐藏状态下图表宽度为 0
- * - 交互页(查询/排行/筛选/AI)用 KeepAlive 缓存, 保留检索条件与对话上下文
- * - 使用 Hash 路由: 刷新不丢失当前页, 且链接可直接分享(如 #/profile/17)
+ * - 图表页(概览/画像)
+ * - 交互页(查询/排行/筛选/AI)
  */
 import { ref, computed, onMounted, onBeforeUnmount, shallowRef } from 'vue'
 import AppSidebar from './components/AppSidebar.vue'
@@ -104,7 +103,7 @@ const metaFailed = computed(() => !store.metaLoading && !store.metaReady)
             <span>⛔</span>
             <div>
               <b>基础数据加载失败。</b>{{ store.metaError }}
-              <div class="muted mt-1">请确认后端已启动: 双击项目根目录「启动后端.bat」, 或执行
+              <div class="muted mt-1">请确认后端已启动: 双击项目根目录「启动后端.bat」,或执行
                 <code>java -jar backend/target/prompt_project-0.0.1-SNAPSHOT.jar</code>(端口 8091)。</div>
             </div>
             <button class="btn btn-ghost btn-sm" style="margin-left:auto" @click="bootstrap()">重试</button>
@@ -116,9 +115,9 @@ const metaFailed = computed(() => !store.metaLoading && !store.metaReady)
         </div>
 
         <footer class="app-footer">
-          <span>上市公司财报解读与行业对标系统 · 省级大学生创新创业训练计划项目</span>
+          <span>上市公司财报解读与行业对标系统</span>
           <span class="sep">|</span>
-          <span>Spring Boot 3.4 + Vue 3 + ECharts · 底层精确计算 + 上层 Prompt 工程生成解读</span>
+          <span>Spring Boot + Vue 底层精确计算 + 上层 Prompt 工程生成解读</span>
           <span class="sep">|</span>
           <span>数据来源: 东方财富 / 新浪公开财报接口 · 仅供学习研究, 不构成投资建议</span>
         </footer>

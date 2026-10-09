@@ -266,7 +266,7 @@ onMounted(() => { loadContext(); loadSide() })
   <div class="ai-view">
     <EmptyState
       v-if="!company"
-      icon="🤖" title="尚未选择公司"
+      icon="⚠️" title="尚未选择公司"
       desc="AI 解读需要先指定分析对象。请前往「公司查询」选择一家公司, 或使用顶栏右侧的公司选择器。"
       action-text="前往公司查询" @action="emit('navigate', 'list')"
     />
@@ -278,7 +278,7 @@ onMounted(() => { loadContext(); loadSide() })
         <div class="card">
           <div class="card-hd">
             <div class="card-title">
-              <span class="ico">🤖</span>AI 财报解读
+              <span class="ico">💡</span>AI 财报解读
               <span class="tag mute">{{ company.stockName }} · {{ year }} 年报</span>
             </div>
             <div class="card-tools">
