@@ -11,7 +11,7 @@ prompt_project/
 │   ├── sql/                  #   建库脚本 01_schema.sql / 真实数据 03_real_data.sql / init_db.bat / 采集脚本
 │   ├── src/                  #   Java 源码(controller/service/mapper/entity)
 │   ├── tools/                #   Python 工具(报告数值校验 / 图表生成 / md2docx 转换)
-│   ├── docs/                 #   文档(.md 为源 · .docx 由 tools/md2docx.py 生成) + 图表
+│   ├── docs/                 #   文档 .md 为源 + 图表
 │   ├── eval/                 #   论文对照实验: 评测脚本 + 逐条原始记录 + 统计脚本 + 结论(README.md)
 │   ├── tests/                #   Python 质量测试
 │   └── README.md             #   后端详细说明(克隆、初始化、启动、接口)
