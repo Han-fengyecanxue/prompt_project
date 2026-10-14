@@ -1,10 +1,10 @@
 <script setup>
 /**
  * AI 解读
- * 核心展示点: "数据注入 -> 模型生成 -> 数值溯源校验" 的闭环
- * - 生成过程分步提示, 让评审看清系统在整个链路里做了什么
- * - 报告中的数字与系统计算数据比对, 可溯源标绿 / 待核对标黄
- * - 附三层 Prompt 模板展示与历史报告记录
+ * 数据注入 -> 模型生成 -> 数值溯源校验 的闭环
+ * - 生成过程分步提示
+ * - 报告中的数字与系统计算数据比对
+ * - 三层 Prompt 模板展示与历史报告记录
  */
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { api } from '../api'
@@ -53,13 +53,9 @@ const SUGGESTIONS = [
   '综合来看, 最需要关注的风险点是什么?'
 ]
 
-/** 可溯源数值集合(对应"当前注入年度" store.year) */
+/** 可溯源数值集合 */
 const knownNumbers = computed(() => collectKnownNumbers(profile.value, benchmark.value))
 
-/**
- * 溯源高亮/统计只在"被校验文本的年度 == 当前注入数据的年度"时成立。
- * 历史记录或旧对话可能来自别的财年, 若强行比对会大面积误报"待人工核对"。
- */
 const yearMatches = (y) => y == null || Number(y) === Number(year.value)
 
 function mdOf(text, y) {
@@ -74,7 +70,7 @@ function checkOf(text, y) {
   return verifyNumbers(text, knownNumbers.value)
 }
 
-/** 报告溯源校验结果(年度不一致时不做校验, 避免误报) */
+/** 溯源校验结果 */
 const reportCheck = computed(() => {
   if (!report.value || !report.value.aiAnswer) return null
   if (!yearMatches(report.value.fiscalYear)) return null
@@ -87,12 +83,12 @@ const reportCheck = computed(() => {
   }
 })
 
-/** 报告来自其他财年(例如切了财年但没重新生成): 提示而非误报 */
+/** 报告来自其他财年(切了财年但没重新生成): 提示而非误报 */
 const reportStale = computed(() =>
   !!(report.value && report.value.fiscalYear != null && !yearMatches(report.value.fiscalYear))
 )
 
-/* ------------------------------------------------------- 历史记录抽屉 */
+/** 历史记录 */
 const detailOpen = ref(false)
 const detailItem = ref(null)
 const detailCheck = computed(() => {

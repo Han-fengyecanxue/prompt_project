@@ -1,7 +1,7 @@
 <script setup>
 /**
- * 系统概览: 面向答辩/评审的第一屏
- * 展示"项目定位 + 数据规模 + 指标体系 + 技术流程 + 运行状态", 让评审在 30 秒内理解系统做了什么
+ * 系统概览
+ * 展示"项目定位 + 数据规模 + 指标体系 + 技术流程 + 运行状态"
  */
 import { computed } from 'vue'
 import StatCard from '../components/StatCard.vue'

@@ -16,8 +16,7 @@ git clone https://github.com/Han-fengyecanxue/prompt_project.git
 cd prompt_project
 ```
 
-1. **初始化数据库**(二选一):
-   - 一键脚本: `cd sql && init_db.bat`(按提示输入 MySQL 密码, 自动导入**真实财报数据**)
+1. **初始化数据库**:
    - 手动: 先执行 `sql/01_schema.sql` 建表(含行业/公司/科目/模板基础字典), 再执行 `sql/03_real_data.sql` 导入真实财报数据(3行业24家公司 2021-2025, 来源: 东方财富/新浪公开接口)
 2. **配置本地环境**: 复制 `src/main/resources/config/application-development.properties.example` 为
    `application-development.properties`, 填入你自己的 MySQL 密码(该文件已被 .gitignore 忽略, 不会提交)

@@ -12,7 +12,7 @@ npm install          # 首次
 npm run dev          # 开发模式 -> http://localhost:5173 (/api 代理到 8091)
 ```
 
-也可以打包后以静态方式预览（**答辩现场更稳**，不启动文件监听）：
+也可以打包后以静态方式预览：
 
 ```bash
 npm run build        # 产物输出到 dist/

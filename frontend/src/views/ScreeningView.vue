@@ -1,7 +1,7 @@
 <script setup>
 /**
  * 智能筛选: 多条件 AND 交叉选股
- * 左侧为条件编辑器(指标 / 运算符 / 阈值), 右侧为命中结果与逐条件判定明细
+ * 左侧为条件编辑器, 右侧为命中结果与逐条件判定明细
  */
 import { ref, computed, watch, onMounted } from 'vue'
 import { api, DIMENSIONS, OPERATORS } from '../api'

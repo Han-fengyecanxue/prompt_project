@@ -1,5 +1,5 @@
 <script setup>
-/** 行业排行: 同行业同财年按指定指标横向排名(Top3 领奖台 + 分布图 + 明细表) */
+/** 行业排行: 同行业同财年按指定指标横向排名(领奖台 + 分布图 + 明细表) */
 import { ref, computed, watch, onMounted } from 'vue'
 import { api, DIMENSIONS } from '../api'
 import { store, toast, bootstrap } from '../store'
