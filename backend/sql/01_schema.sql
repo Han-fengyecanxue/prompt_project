@@ -1,10 +1,6 @@
--- ============================================================
 -- 基于Prompt工程的上市公司财报解读与行业对标系统
 -- 数据库 Schema (MySQL 5.7+)
 -- 库名: financial_analysis
--- 说明: 幂等脚本, 可重复执行(会先删除旧表)
--- ============================================================
-
 CREATE DATABASE IF NOT EXISTS `financial_analysis` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `financial_analysis`;
 
@@ -20,9 +16,7 @@ DROP TABLE IF EXISTS `prompt_template`;
 DROP TABLE IF EXISTS `industry_category`;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- ------------------------------------------------------------
 -- 行业分类
--- ------------------------------------------------------------
 CREATE TABLE `industry_category` (
   `industry_id` int(11) NOT NULL AUTO_INCREMENT,
   `industry_code` varchar(20) NOT NULL COMMENT '证监会行业门类代码, 如 C39',
@@ -33,9 +27,7 @@ CREATE TABLE `industry_category` (
   UNIQUE KEY `industry_code` (`industry_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='行业分类';
 
--- ------------------------------------------------------------
 -- 上市公司
--- ------------------------------------------------------------
 CREATE TABLE `listed_company` (
   `company_id` int(11) NOT NULL AUTO_INCREMENT,
   `stock_code` varchar(10) NOT NULL,
@@ -51,9 +43,7 @@ CREATE TABLE `listed_company` (
   CONSTRAINT `listed_company_ibfk_1` FOREIGN KEY (`industry_id`) REFERENCES `industry_category` (`industry_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='上市公司';
 
--- ------------------------------------------------------------
 -- 报表项目(财报原始数据字典)
--- ------------------------------------------------------------
 CREATE TABLE `report_item` (
   `item_id` int(11) NOT NULL AUTO_INCREMENT,
   `item_code` varchar(50) NOT NULL COMMENT '如 operating_revenue',
@@ -65,9 +55,7 @@ CREATE TABLE `report_item` (
   UNIQUE KEY `item_code` (`item_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='报表项目';
 
--- ------------------------------------------------------------
 -- 财务原始数据
--- ------------------------------------------------------------
 CREATE TABLE `financial_raw_data` (
   `data_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `company_id` int(11) NOT NULL,
@@ -84,9 +72,7 @@ CREATE TABLE `financial_raw_data` (
   CONSTRAINT `financial_raw_data_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `report_item` (`item_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财务原始数据';
 
--- ------------------------------------------------------------
--- 财务指标(计算引擎产出的标准化指标)
--- ------------------------------------------------------------
+-- 财务指标(计算指标)
 CREATE TABLE `financial_indicator` (
   `indicator_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `company_id` int(11) NOT NULL,
@@ -101,9 +87,7 @@ CREATE TABLE `financial_indicator` (
   CONSTRAINT `financial_indicator_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `listed_company` (`company_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财务指标';
 
--- ------------------------------------------------------------
--- 行业对标(行业统计基准: 均值/中位数/标准差/P25/P75)
--- ------------------------------------------------------------
+-- 行业对标(均值/中位数/标准差/P25/P75)
 CREATE TABLE `industry_benchmark` (
   `benchmark_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `industry_id` int(11) NOT NULL,
@@ -121,9 +105,7 @@ CREATE TABLE `industry_benchmark` (
   CONSTRAINT `industry_benchmark_ibfk_1` FOREIGN KEY (`industry_id`) REFERENCES `industry_category` (`industry_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='行业对标';
 
--- ------------------------------------------------------------
--- 提示词模板(三层Prompt工程: 角色设定/数据注入/输出约束)
--- ------------------------------------------------------------
+-- 提示词模板(三层Prompt工程)
 CREATE TABLE `prompt_template` (
   `template_id` int(11) NOT NULL AUTO_INCREMENT,
   `template_type` varchar(30) NOT NULL COMMENT '角色设定/数据注入/输出约束',
@@ -133,9 +115,7 @@ CREATE TABLE `prompt_template` (
   PRIMARY KEY (`template_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='提示词模板';
 
--- ------------------------------------------------------------
 -- 估值快照(收盘价/总市值, 用于PE/PB等估值指标)
--- ------------------------------------------------------------
 CREATE TABLE `valuation_snapshot` (
   `snapshot_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `company_id` int(11) NOT NULL,
@@ -147,9 +127,7 @@ CREATE TABLE `valuation_snapshot` (
   CONSTRAINT `valuation_snapshot_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `listed_company` (`company_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='估值快照';
 
--- ------------------------------------------------------------
--- 解读报告(AI简报/多轮对话记录)
--- ------------------------------------------------------------
+-- 解读报告
 CREATE TABLE `ai_report` (
   `report_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `company_id` int(11) NOT NULL,
@@ -167,11 +145,8 @@ CREATE TABLE `ai_report` (
   CONSTRAINT `ai_report_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `listed_company` (`company_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI解读报告/对话记录';
 
--- ============================================================
--- 基础字典数据 (与真实财报数据配套, 3行业/24家上市公司/23个报表科目/3条Prompt模板)
--- 说明: 字典部分为真实定义(公司/行业/科目均为真实主体), 模拟的仅是财务数字;
---       模拟财务数字已由 03_real_data.sql 中的真实数据取代。
--- ============================================================
+-- 基础字典数据
+-- 说明: 字典部分为真实定义
 -- 行业分类
 INSERT INTO `industry_category` (`industry_id`,`industry_code`,`industry_name`,`parent_id`,`level`) VALUES (1,'C39','计算机、通信和其他电子设备制造业',0,1);
 INSERT INTO `industry_category` (`industry_id`,`industry_code`,`industry_name`,`parent_id`,`level`) VALUES (2,'C27','医药制造业',0,1);
