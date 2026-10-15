@@ -7,6 +7,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { api, DIMENSIONS, OPERATORS } from '../api'
 import { store, toast, bootstrap } from '../store'
 import EmptyState from '../components/EmptyState.vue'
+import AppIcon from '../components/AppIcon.vue'
 import { fmtNum, opText, downloadCsv } from '../utils/format'
 
 defineOptions({ name: 'ScreeningView' })
@@ -151,7 +152,7 @@ const pick = (c) => emit('select', {
     <!-- 条件编辑器 -->
     <div class="card">
       <div class="card-hd">
-        <div class="card-title"><span class="ico">🧮</span>智能筛选 · 多条件交叉(AND)</div>
+        <div class="card-title"><span class="ico"><AppIcon name="screening" :size="15" /></span>智能筛选 · 多条件交叉(AND)</div>
         <span class="card-sub">全部条件同时满足才命中; 支持"高于/低于行业百分位"这类相对口径</span>
         <div class="card-tools">
           <button class="btn btn-ghost btn-sm" @click="clearAll">清空条件</button>
@@ -161,7 +162,7 @@ const pick = (c) => emit('select', {
       <!-- 预设方案 -->
       <div class="preset-row">
         <span class="field-label">快速方案</span>
-        <button v-for="p in PRESETS" :key="p.name" class="chip" @click="applyPreset(p)">🎯 {{ p.name }}</button>
+        <button v-for="p in PRESETS" :key="p.name" class="chip" @click="applyPreset(p)"><span class="chip-ico"><AppIcon name="screening" :size="13" /></span>{{ p.name }}</button>
       </div>
 
       <!-- 环境 -->
@@ -235,18 +236,18 @@ const pick = (c) => emit('select', {
           ＋ 添加条件 ({{ conditions.length }}/{{ MAX_COND }})
         </button>
         <button class="btn" :disabled="loading" @click="run">
-          {{ loading ? '筛选中…' : '🔍 开始筛选' }}
+          <AppIcon name="search" :size="15" /> {{ loading ? '筛选中…' : '开始筛选' }}
         </button>
         <span class="muted">运算符说明: ≥ / > / ≤ / < / 介于区间 / 高于或低于同行业同年度的百分位</span>
       </div>
 
-      <p v-if="err" class="alert mt-3"><span>⛔</span><span>{{ err }}</span></p>
+      <p v-if="err" class="alert mt-3"><span><AppIcon name="warn" :size="15" /></span><span>{{ err }}</span></p>
     </div>
 
     <!-- 结果 -->
     <div v-if="result" class="card">
       <div class="card-hd">
-        <div class="card-title"><span class="ico">✅</span>筛选结果</div>
+        <div class="card-title"><span class="ico"><AppIcon name="screening" :size="15" /></span>筛选结果</div>
         <span class="card-sub">命中 {{ result.total }} 家公司 · 满足 {{ result.conditionCount }} 个条件 · {{ year }} 年报</span>
         <div class="card-tools">
           <button class="btn btn-ghost btn-sm" :disabled="!result.companies || !result.companies.length" @click="exportCsv">⤓ 导出 CSV</button>
@@ -255,7 +256,7 @@ const pick = (c) => emit('select', {
 
       <EmptyState
         v-if="!result.companies || !result.companies.length"
-        icon="🫙" title="没有公司同时满足全部条件"
+        icon="searchx" title="没有公司同时满足全部条件"
         desc="可以尝试放宽阈值、减少条件数量, 或把范围从单行业改为全市场。"
       />
 
@@ -306,13 +307,13 @@ const pick = (c) => emit('select', {
       </div>
 
       <p v-if="result.companies && result.companies.length" class="muted mt-3">
-        💡 明细中 <span class="text-up">绿色 ✓</span> 表示该条件达标; 由于筛选为 AND 逻辑, 命中公司的条件应全部为达标状态。
+        <span class="ico-inline"><AppIcon name="notice" :size="13" /></span> 明细中 <span class="text-up">绿色 ✓</span> 表示该条件达标; 由于筛选为 AND 逻辑, 命中公司的条件应全部为达标状态。
       </p>
     </div>
 
     <div v-else-if="!loading" class="card">
       <EmptyState
-        icon="🧮" title="设置条件后开始筛选"
+        icon="screening" title="设置条件后开始筛选"
         desc="示例: 范围选「白酒」, ROE ≥ 20 且 资产负债率 ≤ 40 —— 找出高盈利且低负债的公司, 再进入财务画像逐项核对。"
       />
     </div>

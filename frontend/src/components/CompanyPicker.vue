@@ -6,6 +6,7 @@
 import { ref, watch, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
 import { api } from '../api'
 import { store, selectCompany } from '../store'
+import AppIcon from './AppIcon.vue'
 
 const open = ref(false)
 const keyword = ref('')
@@ -77,7 +78,7 @@ onBeforeUnmount(() => {
 <template>
   <div ref="rootEl" class="picker" @keydown="onKeydown">
     <button class="picker-btn" :class="{ on: open }" @click="toggle">
-      <span class="p-ico">🏢</span>
+      <span class="p-ico"><AppIcon name="company" :size="15" /></span>
       <template v-if="current">
         <span class="p-name">{{ current.stockName }}</span>
         <span class="p-code mono">{{ current.stockCode }}</span>

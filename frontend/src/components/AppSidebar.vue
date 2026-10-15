@@ -2,6 +2,7 @@
 /** 左侧导航栏 */
 import { store, toggleSidebar, companyCount } from '../store'
 import { NAV } from '../utils/nav'
+import AppIcon from './AppIcon.vue'
 
 defineProps({ active: { type: String, required: true } })
 const emit = defineEmits(['navigate'])
@@ -37,7 +38,7 @@ const emit = defineEmits(['navigate'])
         :title="store.sidebarCollapsed ? item.label : ''"
         @click="emit('navigate', item.key)"
       >
-        <span class="n-ico">{{ item.icon }}</span>
+        <span class="n-ico"><AppIcon :name="item.icon" :size="17" /></span>
         <span v-show="!store.sidebarCollapsed" class="n-text">
           <span class="n-label">{{ item.label }}</span>
           <span class="n-desc">{{ item.desc }}</span>

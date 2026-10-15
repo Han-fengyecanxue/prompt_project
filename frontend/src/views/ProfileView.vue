@@ -11,6 +11,7 @@ import EChart from '../components/EChart.vue'
 import StatCard from '../components/StatCard.vue'
 import EmptyState from '../components/EmptyState.vue'
 import IndicatorTip from '../components/IndicatorTip.vue'
+import AppIcon from '../components/AppIcon.vue'
 import {
   categoryAxis, valueAxis, tooltip, legend, PALETTE, emptyOption
 } from '../utils/charts'
@@ -342,7 +343,7 @@ const doPrint = () => window.print()
   <div class="profile">
     <EmptyState
       v-if="!company"
-      icon="⚠️" title="尚未选择公司"
+      icon="empty" title="尚未选择公司"
       desc="请先在「公司查询」中检索并点击一家公司, 或直接使用顶栏右侧的公司选择器。"
       action-text="前往公司查询" @action="emit('navigate', 'list')"
     />
@@ -386,14 +387,14 @@ const doPrint = () => window.print()
         </div>
 
         <div class="ov-actions no-print">
-          <button class="btn" @click="goAi">💡 生成 AI 解读</button>
+          <button class="btn" @click="goAi"><AppIcon name="ai" :size="15" /> 生成 AI 解读</button>
           <button class="btn btn-ghost" :disabled="!items.length" @click="exportCsv">⤓ 导出对标 CSV</button>
           <button class="btn btn-ghost" :disabled="!trendRaw.length" @click="exportTrendCsv">⤓ 导出趋势 CSV</button>
-          <button class="btn btn-ghost" @click="doPrint">🖨️ 打印 / 存 PDF</button>
+          <button class="btn btn-ghost" @click="doPrint"><AppIcon name="print" :size="15" /> 打印 / 存 PDF</button>
         </div>
       </div>
 
-      <p v-if="err" class="alert"><span>⛔</span><span>{{ err }}</span>
+      <p v-if="err" class="alert"><span><AppIcon name="warn" :size="15" /></span><span>{{ err }}</span>
         <button class="btn btn-ghost btn-xs" style="margin-left:auto" @click="load">重试</button>
       </p>
 
@@ -414,7 +415,7 @@ const doPrint = () => window.print()
       <div class="grid-2">
         <div class="card">
           <div class="card-hd">
-            <div class="card-title"><span class="ico">📊</span>六维能力雷达</div>
+            <div class="card-title"><span class="ico"><AppIcon name="radar" :size="15" /></span>六维能力雷达</div>
             <span class="card-sub">维度内指标评分均值, 50 分为行业中位水平</span>
           </div>
           <EChart :option="radarOption" height="352px" :loading="loading" :empty="!dimScores.length" filename="六维能力雷达" />
@@ -422,7 +423,7 @@ const doPrint = () => window.print()
 
         <div class="card">
           <div class="card-hd">
-            <div class="card-title"><span class="ico">📈</span>核心指标趋势</div>
+            <div class="card-title"><span class="ico"><AppIcon name="trend" :size="15" /></span>核心指标趋势</div>
             <span class="card-sub">{{ yearRange[0] }}–{{ yearRange[1] }} 年</span>
           </div>
           <div class="chips">
@@ -442,7 +443,7 @@ const doPrint = () => window.print()
       <!-- 行业对标图 -->
       <div class="card">
         <div class="card-hd">
-          <div class="card-title"><span class="ico">🎯</span>行业对标评分</div>
+          <div class="card-title"><span class="ico"><AppIcon name="target" :size="15" /></span>行业对标评分</div>
           <span class="card-sub">
             {{ year }} 年报 · {{ items.length ? items[0].total : '—' }} 家同行业样本
           </span>
@@ -462,7 +463,7 @@ const doPrint = () => window.print()
       <!-- 指标速览 -->
       <div class="card" v-if="items.length">
         <div class="card-hd">
-          <div class="card-title"><span class="ico">🧾</span>指标速览</div>
+          <div class="card-title"><span class="ico"><AppIcon name="relist" :size="15" /></span>指标速览</div>
           <span class="card-sub">按维度分组, 展示本公司值 / 行业中位数 / 行业排名</span>
         </div>
         <div class="dim-groups">
@@ -494,7 +495,7 @@ const doPrint = () => window.print()
       <!-- 对标明细表 -->
       <div class="card" v-if="items.length">
         <div class="card-hd">
-          <div class="card-title"><span class="ico">📋</span>行业对标明细</div>
+          <div class="card-title"><span class="ico"><AppIcon name="table" :size="15" /></span>行业对标明细</div>
           <span class="card-sub">点击表头可排序</span>
         </div>
         <div class="tbl-wrap">
@@ -546,7 +547,7 @@ const doPrint = () => window.print()
       <!-- 报表科目 -->
       <div class="card" v-if="profile">
         <div class="card-hd">
-          <div class="card-title"><span class="ico">📑</span>财报原始科目</div>
+          <div class="card-title"><span class="ico"><AppIcon name="report" :size="15" /></span>财报原始科目</div>
           <span class="card-sub">{{ year }} 年报 · 共 {{ (profile.items || []).length }} 项</span>
           <div class="card-tools">
             <span v-if="profile.valuation" class="tag">收盘价 {{ fmtNum(profile.valuation.closePrice) }} 元/股</span>

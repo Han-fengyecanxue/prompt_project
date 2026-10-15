@@ -11,6 +11,7 @@ import { api } from '../api'
 import { store, toast } from '../store'
 import EmptyState from '../components/EmptyState.vue'
 import AppDrawer from '../components/AppDrawer.vue'
+import AppIcon from '../components/AppIcon.vue'
 import { renderMarkdown, verifyNumbers, collectKnownNumbers } from '../utils/markdown'
 import { fmtDateTime, copyText } from '../utils/format'
 
@@ -262,7 +263,7 @@ onMounted(() => { loadContext(); loadSide() })
   <div class="ai-view">
     <EmptyState
       v-if="!company"
-      icon="⚠️" title="尚未选择公司"
+      icon="empty" title="尚未选择公司"
       desc="AI 解读需要先指定分析对象。请前往「公司查询」选择一家公司, 或使用顶栏右侧的公司选择器。"
       action-text="前往公司查询" @action="emit('navigate', 'list')"
     />
@@ -274,7 +275,7 @@ onMounted(() => { loadContext(); loadSide() })
         <div class="card">
           <div class="card-hd">
             <div class="card-title">
-              <span class="ico">💡</span>AI 财报解读
+              <span class="ico"><AppIcon name="ai" :size="15" /></span>AI 财报解读
               <span class="tag mute">{{ company.stockName }} · {{ year }} 年报</span>
             </div>
             <div class="card-tools">
@@ -302,7 +303,7 @@ onMounted(() => { loadContext(); loadSide() })
               </div>
             </div>
 
-            <p v-if="err" class="alert mt-3"><span>⛔</span><span>{{ err }}</span></p>
+            <p v-if="err" class="alert mt-3"><span><AppIcon name="warn" :size="15" /></span><span>{{ err }}</span></p>
           </div>
         </div>
 
@@ -340,7 +341,7 @@ onMounted(() => { loadContext(); loadSide() })
           </div>
 
           <div v-if="reportCheck && reportCheck.missingList.length" class="alert warn mt-3">
-            <span>⚠️</span>
+            <span><AppIcon name="warn" :size="16" /></span>
             <span>
               以下数字未能在系统计算数据中匹配到出处, 建议人工核对:
               <b class="mono">{{ reportCheck.missingList.join('、') }}</b>
@@ -358,14 +359,14 @@ onMounted(() => { loadContext(); loadSide() })
           <div class="md-body" v-html="mdOf(report.aiAnswer, report.fiscalYear)"></div>
 
           <p class="muted mt-4 disclaimer">
-            ⚠️ 本报告由大模型基于系统注入数据生成, 全部数值可由「财务画像」页复核; 仅供学习研究, 不构成投资建议。
+            <AppIcon name="warn" :size="13" /> 本报告由大模型基于系统注入数据生成, 全部数值可由「财务画像」页复核; 仅供学习研究, 不构成投资建议。
           </p>
         </div>
 
         <!-- 对话 -->
         <div class="card">
           <div class="card-hd">
-            <div class="card-title"><span class="ico">💬</span>追问对话</div>
+            <div class="card-title"><span class="ico"><AppIcon name="chat" :size="15" /></span>追问对话</div>
             <span class="card-sub">携带此前对话上下文, 同样受"禁止编造数字"约束</span>
             <div class="card-tools">
               <button class="btn btn-ghost btn-sm" :disabled="!chatHistory.length" @click="clearChat">清空对话</button>
@@ -459,7 +460,7 @@ onMounted(() => { loadContext(); loadSide() })
         </div>
 
         <div class="card">
-          <div class="card-hd"><div class="card-title"><span class="ico">🔍</span>溯源校验说明</div></div>
+          <div class="card-hd"><div class="card-title"><span class="ico"><AppIcon name="search" :size="15" /></span>溯源校验说明</div></div>
           <ul class="note-list">
             <li><span class="num-hit demo">28.56</span> 绿色: 该数字能在系统计算的指标 / 对标数据中找到出处。</li>
             <li><span class="num-miss demo">99.9</span> 黄色: 未匹配到出处, 提示可能为幻觉, 需人工核对。</li>

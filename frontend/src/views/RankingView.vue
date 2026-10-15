@@ -7,6 +7,7 @@ import EChart from '../components/EChart.vue'
 import EmptyState from '../components/EmptyState.vue'
 import SkeletonTable from '../components/SkeletonTable.vue'
 import IndicatorTip from '../components/IndicatorTip.vue'
+import AppIcon from '../components/AppIcon.vue'
 import { categoryAxis, valueAxis, tooltip, emptyOption } from '../utils/charts'
 import { fmtNum, directionText, downloadCsv } from '../utils/format'
 
@@ -21,7 +22,7 @@ const err = ref('')
 const year = computed(() => store.year)
 const meta = computed(() => store.indicatorMap.get(code.value) || null)
 
-const MEDAL = ['🥇', '🥈', '🥉']
+const MEDAL = ['medal1', 'medal2', 'medal3']
 const RANK_COLOR = ['#e2a134', '#93a3b8', '#c98a5b']
 
 const top3 = computed(() => rows.value.slice(0, 3))
@@ -130,7 +131,7 @@ const pick = (r) => emit('select', { companyId: r.companyId, stockCode: r.stockC
     <!-- 筛选 -->
     <div class="card">
       <div class="card-hd">
-        <div class="card-title"><span class="ico">🏆</span>行业指标排行</div>
+        <div class="card-title"><span class="ico"><AppIcon name="ranking" :size="15" /></span>行业指标排行</div>
         <span class="card-sub">同行业 · 同财年 · 按单一指标横向对比, 排名 1 = 最优</span>
         <div class="card-tools">
           <button class="btn btn-ghost btn-sm" :disabled="!rows.length" @click="exportCsv">⤓ 导出 CSV</button>
@@ -167,7 +168,7 @@ const pick = (r) => emit('select', { companyId: r.companyId, stockCode: r.stockC
           <span class="muted">{{ meta.dimension }}</span>
         </div>
       </div>
-      <p v-if="err" class="alert mt-3"><span>⛔</span><span>{{ err }}</span>
+      <p v-if="err" class="alert mt-3"><span><AppIcon name="warn" :size="15" /></span><span>{{ err }}</span>
         <button class="btn btn-ghost btn-xs" style="margin-left:auto" @click="load">重试</button>
       </p>
     </div>
@@ -178,7 +179,7 @@ const pick = (r) => emit('select', { companyId: r.companyId, stockCode: r.stockC
       <!-- Top3 领奖台 -->
       <div class="podium">
         <div v-for="(r, i) in top3" :key="r.companyId" class="pod" :class="`pod-${i + 1}`">
-          <div class="pod-rank">{{ MEDAL[i] }}</div>
+          <div class="pod-rank"><AppIcon :name="MEDAL[i]" :size="22" /></div>
           <div class="pod-name">{{ r.stockName }}</div>
           <div class="pod-code mono">{{ r.stockCode }}</div>
           <div class="pod-value">
@@ -204,11 +205,11 @@ const pick = (r) => emit('select', { companyId: r.companyId, stockCode: r.stockC
       <!-- 分布图 -->
       <div class="card">
         <div class="card-hd">
-          <div class="card-title"><span class="ico">📊</span>{{ meta ? meta.name : code }} · 行业分布</div>
+          <div class="card-title"><span class="ico"><AppIcon name="chart" :size="15" /></span>{{ meta ? meta.name : code }} · 行业分布</div>
           <span class="card-sub">{{ year }} 年报 · 共 {{ rows.length }} 家样本</span>
           <div class="card-tools">
-            <span class="tag" style="background:#f6e7c8;color:#a3741a">🥇 第 1 名</span>
-            <span class="tag mute">🥈🥉 前三名</span>
+            <span class="tag" style="background:#f6e7c8;color:#a3741a"><AppIcon name="medal1" :size="12" /> 第 1 名</span>
+            <span class="tag mute"><AppIcon name="medal2" :size="12" /><AppIcon name="medal3" :size="12" /> 前三名</span>
           </div>
         </div>
         <EChart :option="barOption" height="360px" :filename="`${code}_行业分布`" />
@@ -237,10 +238,9 @@ const pick = (r) => emit('select', { companyId: r.companyId, stockCode: r.stockC
               <tr
                 v-for="r in rows" :key="r.companyId" class="clickable"
                 :class="{ 'is-active': store.selectedCompany && store.selectedCompany.companyId === r.companyId }"
-                @click="pick(r)"
-              >
+                @click="pick(r)">
                 <td class="center">
-                  <span v-if="r.rank <= 3" class="medal">{{ MEDAL[r.rank - 1] }}</span>
+                  <span v-if="r.rank <= 3" class="medal"><AppIcon :name="MEDAL[r.rank - 1]" :size="13" /></span>
                   <span class="mono">{{ r.rank }}</span>
                 </td>
                 <td class="mono">{{ r.stockCode }}</td>
@@ -262,7 +262,7 @@ const pick = (r) => emit('select', { companyId: r.companyId, stockCode: r.stockC
 
     <div v-else-if="!loading && !err" class="card">
       <EmptyState
-        icon="🏆" title="该行业 / 年度暂无此指标数据"
+        icon="ranking" title="该行业 / 年度暂无此指标数据"
         desc="可尝试切换其他指标或财年; 若全部为空, 请确认后端已执行过一次指标重算(POST /api/finance/recalc)。"
       />
     </div>
@@ -303,5 +303,5 @@ const pick = (r) => emit('select', { companyId: r.companyId, stockCode: r.stockC
 .ss-k { font-size: 11.5px; color: var(--c-text-3); }
 .ss-v { font-family: var(--font-num); font-size: 15px; font-weight: 600; color: var(--c-brand-800); }
 
-.medal { margin-right: 5px; }
+.medal { display: inline-flex; align-items: center; margin-right: 4px; vertical-align: middle; }
 </style>

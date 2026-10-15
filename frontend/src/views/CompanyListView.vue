@@ -5,6 +5,7 @@ import { api } from '../api'
 import { store, toast } from '../store'
 import EmptyState from '../components/EmptyState.vue'
 import SkeletonTable from '../components/SkeletonTable.vue'
+import AppIcon from '../components/AppIcon.vue'
 
 defineOptions({ name: 'CompanyListView' })
 const emit = defineEmits(['select', 'navigate'])
@@ -81,7 +82,7 @@ const exchangeTag = (ex) => (ex === 'SH' ? '上海证券交易所' : ex === 'SZ'
     <!-- 检索区 -->
     <div class="card">
       <div class="card-hd">
-        <div class="card-title"><span class="ico">🔍</span>样本公司检索</div>
+        <div class="card-title"><span class="ico"><AppIcon name="search" :size="15" /></span>样本公司检索</div>
         <span class="card-sub">共收录 {{ total }} 家 · 数据来源为公开财报接口</span>
         <div class="card-tools">
           <div class="segmented">
@@ -113,7 +114,7 @@ const exchangeTag = (ex) => (ex === 'SH' ? '上海证券交易所' : ex === 'SZ'
 
     <!-- 结果 -->
     <div class="card">
-      <p v-if="err" class="alert"><span>⛔</span><span>{{ err }}</span>
+      <p v-if="err" class="alert"><span><AppIcon name="warn" :size="15" /></span><span>{{ err }}</span>
         <button class="btn btn-ghost btn-xs" style="margin-left:auto" @click="load">重试</button>
       </p>
 
@@ -121,7 +122,7 @@ const exchangeTag = (ex) => (ex === 'SH' ? '上海证券交易所' : ex === 'SZ'
 
       <template v-else-if="!err">
         <EmptyState
-          v-if="!list.length" icon="🔍" title="没有匹配的公司"
+          v-if="!list.length" icon="search" title="没有匹配的公司"
           desc="试试更换关键字, 或清空行业筛选条件后重新检索。"
           action-text="重置筛选条件" @action="reset"
         />
@@ -200,7 +201,7 @@ const exchangeTag = (ex) => (ex === 'SH' ? '上海证券交易所' : ex === 'SZ'
       </div>
 
       <div v-if="!loading && list.length" class="hint-row muted">
-        💡 点击任意一行 / 卡片即可载入该公司, 系统会自动跳转到「财务画像 · 行业对标」
+        <AppIcon name="notice" :size="13" /> 点击任意一行 / 卡片即可载入该公司, 系统会自动跳转到「财务画像 · 行业对标」
       </div>
     </div>
   </div>

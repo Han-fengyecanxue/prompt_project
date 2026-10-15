@@ -1,5 +1,6 @@
 <script setup>
 /** KPI 指标卡: 用于概览页与画像页顶部的关键数字展示 */
+import AppIcon from './AppIcon.vue'
 defineProps({
   label: { type: String, required: true },
   value: { type: [String, Number], default: '—' },
@@ -17,7 +18,7 @@ defineProps({
   <div class="stat" :class="`accent-${accent}`">
     <div class="s-top">
       <span class="s-label">{{ label }}</span>
-      <span v-if="icon" class="s-ico">{{ icon }}</span>
+      <span v-if="icon" class="s-ico"><AppIcon :name="icon" :size="16" /></span>
     </div>
     <div class="s-value">
       <span class="kpi-value sm">{{ value }}</span>

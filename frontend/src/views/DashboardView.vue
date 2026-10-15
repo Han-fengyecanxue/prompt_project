@@ -7,6 +7,7 @@ import { computed } from 'vue'
 import StatCard from '../components/StatCard.vue'
 import EChart from '../components/EChart.vue'
 import EmptyState from '../components/EmptyState.vue'
+import AppIcon from '../components/AppIcon.vue'
 import { store, companyCount, indicatorsByDim, selectCompany, checkHealth } from '../store'
 import { YEARS, LATEST_YEAR } from '../api'
 import { categoryAxis, valueAxis, tooltip, PALETTE } from '../utils/charts'
@@ -71,11 +72,11 @@ const healthRows = computed(() => {
 })
 
 const FLOW = [
-  { n: '01', t: '数据采集', d: '东方财富 / 新浪公开接口抓取 2021–2025 年报原始科目', i: '🗄️' },
-  { n: '02', t: '指标计算', d: '后端计算引擎由原始科目推导 12 项标准化财务指标', i: '🧮' },
-  { n: '03', t: '行业对标', d: '按 行业 × 年度 × 指标 统计均值/中位数/P25/P75 与百分位排名', i: '📐' },
-  { n: '04', t: 'Prompt 生成', d: '三层 Prompt(角色设定/数据注入/输出约束)驱动大模型撰写解读', i: '💡' },
-  { n: '05', t: '数值溯源', d: '校验报告数字能否在系统计算数据中找到出处, 抑制幻觉', i: '🔍' }
+  { n: '01', t: '数据采集', d: '东方财富 / 新浪公开接口抓取 2021–2025 年报原始科目', i: 'database' },
+  { n: '02', t: '指标计算', d: '后端计算引擎由原始科目推导 12 项标准化财务指标', i: 'calculator' },
+  { n: '03', t: '行业对标', d: '按 行业 × 年度 × 指标 统计均值/中位数/P25/P75 与百分位排名', i: 'rank' },
+  { n: '04', t: 'Prompt 生成', d: '三层 Prompt(角色设定/数据注入/输出约束)驱动大模型撰写解读', i: 'ai' },
+  { n: '05', t: '数值溯源', d: '校验报告数字能否在系统计算数据中找到出处, 抑制幻觉', i: 'search' }
 ]
 
 /** 快捷入口: 挑一家代表公司直接体验完整链路 */
@@ -103,7 +104,7 @@ function tryDemo() {
           并校验报告中的每个数字是否来自系统数据, 从工程上抑制大模型幻觉。
         </p>
         <div class="hero-actions">
-          <button class="btn" @click="emit('navigate', 'list')">🔍 开始公司查询</button>
+          <button class="btn" @click="emit('navigate', 'list')"><AppIcon name="search" :size="15" /> 开始公司查询</button>
           <button class="btn btn-ghost" @click="tryDemo">⚡ 体验完整链路(贵州茅台)</button>
         </div>
       </div>
@@ -116,13 +117,13 @@ function tryDemo() {
 
     <!-- 关键数字 -->
     <section class="kpi-grid">
-      <StatCard label="覆盖行业" :value="industryCount" unit="个" icon="🏭" hint="证监会行业门类" />
-      <StatCard label="样本上市公司" :value="companyCount" unit="家" icon="🏢" hint="真实财报数据" accent="purple" />
-      <StatCard label="标准化指标" :value="indicatorCount" unit="项" icon="📐" hint="六大维度" accent="up" />
-      <StatCard label="数据年度" :value="`${YEARS[0]}–${LATEST_YEAR}`" icon="📅" hint="5 个完整财年" accent="warn" />
+      <StatCard label="覆盖行业" :value="industryCount" unit="个" icon="industry" hint="证监会行业门类" />
+      <StatCard label="样本上市公司" :value="companyCount" unit="家" icon="company" hint="真实财报数据" accent="purple" />
+      <StatCard label="标准化指标" :value="indicatorCount" unit="项" icon="ruler" hint="六大维度" accent="up" />
+      <StatCard label="数据年度" :value="`${YEARS[0]}–${LATEST_YEAR}`" icon="calendar" hint="5 个完整财年" accent="warn" />
       <StatCard
         label="报告数据点" :value="companyCount * indicatorCount * YEARS.length"
-        unit="个" icon="🔢" hint="公司 × 指标 × 年度"
+        unit="个" icon="number" hint="公司 × 指标 × 年度"
       />
     </section>
 
@@ -130,7 +131,7 @@ function tryDemo() {
     <section class="two-col">
       <div class="card">
         <div class="card-hd">
-          <div class="card-title"><span class="ico">🏭</span>行业样本分布</div>
+          <div class="card-title"><span class="ico"><AppIcon name="industry" :size="15" /></span>行业样本分布</div>
           <span class="card-sub">按行业统计样本公司数量</span>
         </div>
         <EChart :option="industryOption" height="272px" :empty="!store.industries.length" empty-text="字典加载中" filename="行业样本分布" />
@@ -138,7 +139,7 @@ function tryDemo() {
 
       <div class="card">
         <div class="card-hd">
-          <div class="card-title"><span class="ico">📐</span>指标维度覆盖</div>
+          <div class="card-title"><span class="ico"><AppIcon name="ruler" :size="15" /></span>指标维度覆盖</div>
           <span class="card-sub">六大维度指标数量</span>
         </div>
         <EChart :option="dimensionOption" height="272px" :empty="!store.indicators.length" empty-text="字典加载中" filename="指标维度覆盖" />
@@ -188,7 +189,7 @@ function tryDemo() {
                   </span>
                 </td>
               </tr>
-              <tr v-if="!store.indicators.length"><td colspan="5"><EmptyState title="指标字典加载中…" icon="⏳" /></td></tr>
+              <tr v-if="!store.indicators.length"><td colspan="5"><EmptyState title="指标字典加载中…" icon="empty" /></td></tr>
             </tbody>
           </table>
         </div>
